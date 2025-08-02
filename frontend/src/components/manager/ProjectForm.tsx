@@ -9,16 +9,22 @@ import { X, AlertCircle, Plus, Minus } from 'lucide-react';
 
 // Validation schema
 const projectSchema = z.object({
-  name: z.string().min(1, 'Project name is required').max(100, 'Name is too long'),
-  description: z.string().min(1, 'Description is required').max(500, 'Description is too long'),
+  name: z.string().min(1, 'Project name is required').max(100),
+  description: z.string().min(1, 'Description is required').max(500),
   startDate: z.string().min(1, 'Start date is required'),
   endDate: z.string().min(1, 'End date is required'),
-  teamSize: z.number().min(1, 'Team size must be at least 1').max(50, 'Team size cannot exceed 50'),
-  status: z.enum(['planning', 'active', 'on-hold', 'completed']),
-}).refine((data) => new Date(data.endDate) > new Date(data.startDate), {
-  message: "End date must be after start date",
-  path: ["endDate"],
-});
+  teamSize: z.number().min(1).max(50),
+  status: z.enum(['planning', 'active', 'completed']),
+  requiredSkills: z.array(z.string()), // ✅ now required
+  managerId: z.string(),               // ✅ now required
+}).refine(
+  (data) => new Date(data.endDate) > new Date(data.startDate),
+  {
+    message: "End date must be after start date",
+    path: ['endDate'],
+  }
+);
+
 
 interface ProjectFormProps {
   isOpen: boolean;
@@ -52,7 +58,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSuccess, p
     reset,
     setValue,
     formState: { errors },
-  } = useForm<ProjectFormData>({
+  } = useForm<z.infer<typeof projectSchema>>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
       status: 'planning',

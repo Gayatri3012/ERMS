@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
 import type { Assignment, Project } from '../../types';
 import  CapacityBar  from '../ui/CapacityBar';
-import { Calendar, Clock, User, Settings } from 'lucide-react';
+import { Calendar, Clock, User } from 'lucide-react';
 import EngineerAssignments from './EngineerAssignments';
 import EngineerProfile from './EngineerProfile';
 
@@ -11,8 +11,6 @@ const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const { state, fetchAssignments, fetchProjects , getEngineerCapacity} = useApp();
   const {assignments, projects} = state;
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [userAssignments, setUserAssignments] = useState<Assignment[]>([]);
   const [currentProjects, setCurrentProjects] = useState<Project[]>([]);
   const [totalCapacity, setTotalCapacity] = useState(0);
 
@@ -29,7 +27,6 @@ const Dashboard: React.FC = () => {
       const myAssignments = assignments.filter((assignment: Assignment) => 
         assignment.engineerId._id.toString() === user._id.toString()
       );
-      setUserAssignments(myAssignments);
 
       // Calculate total capacity used
       const today = new Date();
@@ -52,25 +49,6 @@ const Dashboard: React.FC = () => {
 
 
 
-  const upcomingAssignments = userAssignments.filter(assignment => 
-    new Date(assignment.startDate) > new Date()
-  );
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const getDaysUntil = (date: string) => {
-    const today = new Date();
-    const targetDate = new Date(date);
-    const diffTime = targetDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
 
   if (!user) {
     return <div>Loading...</div>;
