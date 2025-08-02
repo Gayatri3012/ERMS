@@ -1,41 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
-import type { User, Assignment, Project, Engineer } from '../../types';
+import type { User, Project } from '../../types';
 import TeamOverview from './TeamOverview';
 import { 
   Users, 
   FolderOpen, 
   TrendingUp, 
   AlertTriangle, 
-  Plus,
-  Calendar,
-  Activity
 } from 'lucide-react';
-import { Button } from '@/components/ui/shadcn-components';
 import { Alert, AlertDescription } from '@/components/ui/shadcn-components';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/shadcn-components';
+
 import { calculateEngineersCapacity, getCapacitySummary } from '@/utils/engineerCapacity';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const { state, fetchEngineers, fetchProjects, fetchAssignments } = useApp();
   const { engineers, projects, assignments } = state;
-  const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState({
     totalEngineers: 0,
     activeProjects: 0,
     avgUtilization: 0,
     overloadedEngineers: 0
-  });
-  const [recentAssignments, setRecentAssignments] = useState<Assignment[]>([]);
+  })
   const [capacityAlerts, setCapacityAlerts] = useState<User[]>([]);
 
   useEffect(() => {
@@ -49,7 +36,6 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (engineers?.length > 0 && assignments.length > 0) {
       calculateStats();
-      getRecentAssignments();
       getCapacityAlerts();
     }
   }, [engineers, assignments, projects]);
@@ -67,12 +53,6 @@ const calculateStats = () => {
   });
 };
 
-  const getRecentAssignments = () => {
-    const recent = assignments
-      .sort((a: Assignment, b: Assignment) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
-      .slice(0, 5);
-    setRecentAssignments(recent);
-  };
 
 // Replace the entire getCapacityAlerts function with:
 const getCapacityAlerts = () => {
@@ -91,23 +71,7 @@ const getCapacityAlerts = () => {
   setCapacityAlerts(alerts);
 };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
 
-  const getEngineerName = (engineerId: string) => {
-    const engineer = engineers.find((e: Engineer) => e._id === engineerId);
-    return engineer?.name || 'Unknown Engineer';
-  };
-
-  const getProjectName = (projectId: string) => {
-    const project = projects.find((p: Project) => p._id.toString() === projectId.toString());
-    return project?.name || 'Unknown Project';
-  };
 
   if (!user || user.role !== 'manager') {
     return (
@@ -216,8 +180,6 @@ const getCapacityAlerts = () => {
 
                 <TeamOverview />
                 
-
-            
 
           
             </div>

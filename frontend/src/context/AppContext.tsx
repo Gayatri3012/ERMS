@@ -63,7 +63,7 @@ const ActionType = {
   DELETE_ASSIGNMENT: 'DELETE_ASSIGNMENT',
 } as const;
 
-type ActionTypeKeys = typeof ActionType[keyof typeof ActionType];
+// type ActionTypeKeys = typeof ActionType[keyof typeof ActionType];
 
 type Action =
   | { type: typeof ActionType.SET_LOADING; payload: boolean }

@@ -3,11 +3,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
 ;
 import { Settings } from 'lucide-react';
-import api from '@/utils/api';
 
 const EngineerProfile: React.FC = () => {
   const { user } = useAuth();
-  const { state, fetchAssignments, fetchProjects } = useApp();
+  const { fetchAssignments, fetchProjects } = useApp();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
 

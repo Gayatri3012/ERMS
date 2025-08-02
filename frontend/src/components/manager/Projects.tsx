@@ -28,7 +28,7 @@ import {
 const Projects: React.FC = () => {
   const { user } = useAuth();
   const { state, fetchEngineers, fetchProjects, fetchAssignments } = useApp();
-  const { projects, assignments, engineers } = state;
+  const { projects, assignments } = state;
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   

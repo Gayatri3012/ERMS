@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useApp } from '../../context/AppContext';
 import type { Assignment, AssignmentFormData } from '../../types';
-import { X, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/shadcn-components';
 import { Alert, AlertDescription } from '@/components/ui/shadcn-components';
 
@@ -50,7 +50,6 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
     register,
     handleSubmit,
     watch,
-    setValue,
     reset,
     formState: { errors },
   } = useForm<AssignmentFormData>({

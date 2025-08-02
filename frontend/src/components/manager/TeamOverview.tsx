@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 // import type { Engineer } from '../types';
 import CapacityBar from '../ui/CapacityBar';
-import { Search, Filter, Plus, User } from 'lucide-react';
+import { Search, Filter, User } from 'lucide-react';
 import { calculateEngineerCapacity } from '@/utils/engineerCapacity';
 import { 
-  Button,
   Table,
   TableBody,
   TableCell,
@@ -25,8 +24,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = () => {
   const [skillFilter, setSkillFilter] = useState('');
   const [seniorityFilter, setSeniorityFilter] = useState('');
   const [capacityFilter, setCapacityFilter] = useState('');
-  const [showAssignmentForm, setShowAssignmentForm] = useState(false);
-  const [selectedEngineerId, setSelectedEngineerId] = useState<string>('');
+
 
   useEffect(() => {
     fetchEngineers();
@@ -139,16 +137,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = () => {
     };
   };
 
-  const handleCreateAssignment = (engineerId: string) => {
-    setSelectedEngineerId(engineerId);
-    setShowAssignmentForm(true);
-  };
 
-  const handleAssignmentFormClose = () => {
-    setShowAssignmentForm(false);
-    setSelectedEngineerId('');
-    fetchAssignments();
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
