@@ -15,6 +15,7 @@ import {
   XCircle,
   CalendarDays,
   List,
+
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -63,8 +64,11 @@ const Assignments: React.FC = () => {
   // Enhanced assignments with additional calculated data
   const enhancedAssignments = useMemo(() => {
     return assignments.map(assignment => {
-      const engineer = engineers.find(e => e._id === assignment.engineer?._id || e._id === assignment.engineerId);
-      const project = projects.find(p => p._id === assignment.project?._id || p._id === assignment.projectId);
+      const extractId = (id: string | { _id: string }) => {
+        return typeof id === 'object' && id !== null ? id._id : id;
+      };
+      const engineer = engineers.find(e => e._id === extractId(assignment.engineerId));
+      const project = projects.find(p => p._id === extractId(assignment.projectId));
       
       // Calculate assignment status based on dates
       const now = new Date();

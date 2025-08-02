@@ -22,7 +22,9 @@ const EngineerProfile: React.FC = () => {
   useEffect(() => {
     if (user && assignments.length > 0) {
       // Filter assignments for current user
-      const myAssignments = assignments.filter((assignment: Assignment) =>  assignment.engineerId?._id.toString() === user._id?.toString()
+      const myAssignments = assignments.filter((assignment: Assignment) =>  {
+        console.log(assignment.engineerId._id, user._id)
+        return assignment.engineerId?._id === user._id}
         );
       setUserAssignments(myAssignments);
 
