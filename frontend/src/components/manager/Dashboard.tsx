@@ -14,14 +14,6 @@ import {
 import { 
   Alert, 
   AlertDescription, 
-  Badge, 
-  Progress, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow,
   Card,
   CardContent,
   CardDescription,
@@ -55,10 +47,9 @@ const Dashboard: React.FC = () => {
     overloadedEngineers: 0
   })
   const [capacityAlerts, setCapacityAlerts] = useState<User[]>([]);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('analytics');
   const [chartData, setChartData] = useState<any[]>([]);
   const [utilizationData, setUtilizationData] = useState<any[]>([]);
-  const [teamOverviewData, setTeamOverviewData] = useState<any[]>([]);
 
   useEffect(() => {
     if (user && user.role === 'manager') {
@@ -73,7 +64,7 @@ const Dashboard: React.FC = () => {
       calculateStats();
       getCapacityAlerts();
       prepareChartData();
-      prepareTeamOverviewData();
+
     }
   }, [engineers, assignments, projects]);
 
@@ -144,34 +135,7 @@ const Dashboard: React.FC = () => {
     setChartData(chartData);
   };
 
-  const prepareTeamOverviewData = () => {
-    const engineersWithCapacity = calculateEngineersCapacity(engineers, assignments);
-    
-    const teamData = engineersWithCapacity.map(engineer => ({
-      id: engineer._id,
-      name: engineer.name,
-      email: engineer.email,
-      skills: engineer.skills || [],
-      utilization: Math.round(engineer.capacityInfo.totalAllocated),
-      maxCapacity: engineer.maxCapacity,
-      assignments: engineer.currentAssignments || [],
-      status: engineer.capacityInfo.totalAllocated > engineer.maxCapacity ? 'overloaded' : 
-              engineer.capacityInfo.totalAllocated < 30 ? 'underutilized' : 'optimal'
-    }));
 
-    setTeamOverviewData(teamData);
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'overloaded':
-        return <Badge variant="destructive">Overloaded</Badge>;
-      case 'underutilized':
-        return <Badge className="bg-yellow-500 text-white">Under-utilized</Badge>;
-      default:
-        return <Badge className="bg-green-500 text-white">Optimal</Badge>;
-    }
-  };
 
   // Custom tooltip for bar chart
   const CustomBarTooltip = ({ active, payload, label }: any) => {
@@ -298,10 +262,9 @@ const Dashboard: React.FC = () => {
         <div className="mb-6">
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
-              {[
-                { id: 'overview', name: 'Overview', icon: Users },
+              {[                
                 { id: 'analytics', name: 'Analytics', icon: BarChart3 },
-                { id: 'team', name: 'Team Details', icon: Users }
+                { id: 'overview', name: 'Overview', icon: Users },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -453,68 +416,6 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'team' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Team Overview</CardTitle>
-              <CardDescription>Detailed view of all team members and their current workload</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Engineer</TableHead>
-                    <TableHead>Skills</TableHead>
-                    <TableHead>Utilization</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Progress</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {teamOverviewData.map((engineer) => (
-                    <TableRow key={engineer.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium text-gray-900">{engineer.name}</div>
-                          <div className="text-sm text-gray-500">{engineer.email}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {engineer.skills.slice(0, 3).map((skill: string, index: number) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {skill}
-                            </Badge>
-                          ))}
-                          {engineer.skills.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{engineer.skills.length - 3}
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-medium">{engineer.utilization}%</span>
-                        <span className="text-gray-500"> / {engineer.maxCapacity}%</span>
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(engineer.status)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="w-full">
-                          <Progress 
-                            value={Math.min(engineer.utilization, 100)} 
-                            className="h-2"
-                          />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );

@@ -7,24 +7,34 @@ import { useAuth } from '../../context/AuthContext';
 import type { Project, ProjectFormData } from '../../types';
 import { X, AlertCircle, Plus, Minus } from 'lucide-react';
 
-// Validation schema
+// Validation schema with proper date validation
 const projectSchema = z.object({
   name: z.string().min(1, 'Project name is required').max(100),
   description: z.string().min(1, 'Description is required').max(500),
   startDate: z.string().min(1, 'Start date is required'),
   endDate: z.string().min(1, 'End date is required'),
-  teamSize: z.number().min(1).max(50),
+  teamSize: z.number().min(1, 'Team size must be at least 1').max(50, 'Team size cannot exceed 50'),
   status: z.enum(['planning', 'active', 'completed']),
-  requiredSkills: z.array(z.string()), // ✅ now required
-  managerId: z.string(),               // ✅ now required
+  requiredSkills: z.array(z.string()).min(0, 'Skills are optional'),
+  managerId: z.string().min(1, 'Manager ID is required'),               
 }).refine(
+  (data) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+    const startDate = new Date(data.startDate);
+    return startDate >= today;
+  },
+  {
+    message: "Start date cannot be in the past",
+    path: ['startDate'],
+  }
+).refine(
   (data) => new Date(data.endDate) > new Date(data.startDate),
   {
     message: "End date must be after start date",
     path: ['endDate'],
   }
 );
-
 
 interface ProjectFormProps {
   isOpen: boolean;
@@ -51,20 +61,29 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSuccess, p
   const [skillSearchTerm, setSkillSearchTerm] = useState('');
 
   const isEditing = Boolean(project);
+  
+  // Get today's date in YYYY-MM-DD format for min date
+  const today = new Date().toISOString().split('T')[0];
 
   const {
     register,
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<z.infer<typeof projectSchema>>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
       status: 'planning',
       teamSize: 3,
+      requiredSkills: [],
+      managerId: '',
     }
   });
+
+  // Watch form values for debugging
+  const watchedValues = watch();
 
   // Format date for input field (YYYY-MM-DD)
   const formatDateForInput = (dateString: string) => {
@@ -72,6 +91,18 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSuccess, p
     const date = new Date(dateString);
     return date.toISOString().split('T')[0];
   };
+
+  // Update requiredSkills in form when selectedSkills changes
+  useEffect(() => {
+    setValue('requiredSkills', selectedSkills);
+  }, [selectedSkills, setValue]);
+
+  // Set managerId when user changes
+  useEffect(() => {
+    if (user?._id) {
+      setValue('managerId', user._id);
+    }
+  }, [user, setValue]);
 
   // Initialize form with project data when editing
   useEffect(() => {
@@ -82,16 +113,19 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSuccess, p
       setValue('endDate', formatDateForInput(project.endDate));
       setValue('teamSize', project.teamSize || 3);
       setValue('status', project.status || 'planning');
+      setValue('managerId', user?._id || '');
       setSelectedSkills(project.requiredSkills || []);
     } else if (!project && isOpen) {
       // Reset form for new project
       reset({
         status: 'planning',
         teamSize: 3,
+        requiredSkills: [],
+        managerId: user?._id || '',
       });
       setSelectedSkills([]);
     }
-  }, [project, isOpen, setValue, reset]);
+  }, [project, isOpen, setValue, reset, user]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -108,26 +142,35 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSuccess, p
 
   const handleAddSkill = (skill: string) => {
     if (!selectedSkills.includes(skill)) {
-      setSelectedSkills([...selectedSkills, skill]);
+      const newSkills = [...selectedSkills, skill];
+      setSelectedSkills(newSkills);
       setSkillSearchTerm('');
     }
   };
 
   const handleRemoveSkill = (skillToRemove: string) => {
-    setSelectedSkills(selectedSkills.filter(skill => skill !== skillToRemove));
+    const newSkills = selectedSkills.filter(skill => skill !== skillToRemove);
+    setSelectedSkills(newSkills);
   };
 
   const handleAddCustomSkill = () => {
     if (skillSearchTerm.trim() && !selectedSkills.includes(skillSearchTerm.trim())) {
-      setSelectedSkills([...selectedSkills, skillSearchTerm.trim()]);
+      const newSkills = [...selectedSkills, skillSearchTerm.trim()];
+      setSelectedSkills(newSkills);
       setSkillSearchTerm('');
     }
   };
 
-  const onSubmit = async (data: ProjectFormData) => {
+  const onSubmit = async (data: z.infer<typeof projectSchema>) => {
     try {
       setIsLoading(true);
       setError(null);
+      
+      // Debug logs
+      console.log('Form data before submission:', data);
+      console.log('Selected skills:', selectedSkills);
+      console.log('User:', user);
+      console.log('All form errors:', errors);
 
       const projectData = {
         ...data,
@@ -135,18 +178,24 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSuccess, p
         teamSize: Number(data.teamSize),
         managerId: user?._id || '',
       };
-      console.log(projectData)
+      
+      console.log('Final project data:', projectData);
 
       if (isEditing && project?._id) {
+        console.log('Updating project with ID:', project._id);
         await editProject(project._id, projectData);
       } else {
+        console.log('Creating new project');
         await createProject(projectData);
       }
       
+      console.log('Project operation successful');
       handleClose();
       onSuccess?.();
     } catch (err: any) {
-      setError(err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} project`);
+      console.error('Form submission error:', err);
+      console.error('Error response:', err.response);
+      setError(err.response?.data?.message || err.message || `Failed to ${isEditing ? 'update' : 'create'} project`);
     } finally {
       setIsLoading(false);
     }
@@ -181,6 +230,18 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSuccess, p
           <div className="mb-4 bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded flex items-center">
             <AlertCircle className="h-5 w-5 mr-2" />
             {error}
+          </div>
+        )}
+
+        {/* Display validation errors */}
+        {Object.keys(errors).length > 0 && (
+          <div className="mb-4 bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded">
+            <h4 className="font-medium">Please fix the following errors:</h4>
+            <ul className="mt-1 text-sm list-disc list-inside">
+              {Object.entries(errors).map(([field, error]) => (
+                <li key={field}>{field}: {error?.message}</li>
+              ))}
+            </ul>
           </div>
         )}
 
@@ -226,6 +287,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSuccess, p
                 {...register('startDate')}
                 type="date"
                 id="startDate"
+                min={today} // Prevent selecting past dates
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
               {errors.startDate && (
@@ -241,6 +303,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSuccess, p
                 {...register('endDate')}
                 type="date"
                 id="endDate"
+                min={watchedValues.startDate || today} // End date should be after start date
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
               {errors.endDate && (

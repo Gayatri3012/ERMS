@@ -12,7 +12,6 @@ import {
   Calendar,
   CheckCircle,
   Clock,
-  XCircle
 } from 'lucide-react';
 import { 
   Button,
@@ -128,8 +127,6 @@ const Projects: React.FC = () => {
         return <Clock className="h-4 w-4 text-yellow-600" />;
       case 'completed':
         return <CheckCircle className="h-4 w-4 text-blue-600" />;
-      case 'on-hold':
-        return <XCircle className="h-4 w-4 text-red-600" />;
       default:
         return <Clock className="h-4 w-4 text-gray-600" />;
     }
@@ -260,7 +257,6 @@ const Projects: React.FC = () => {
                   <option value="">All Status</option>
                   <option value="planning">Planning</option>
                   <option value="active">Active</option>
-                  <option value="on-hold">On Hold</option>
                   <option value="completed">Completed</option>
                 </select>
               </div>
