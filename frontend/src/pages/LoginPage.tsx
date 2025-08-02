@@ -1,6 +1,6 @@
 // Create frontend/src/pages/LoginPage.tsx:
-import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React from 'react';
+import {  useNavigate } from 'react-router-dom';
 import LoginForm from '../components/LoginForm';
 import { Users } from 'lucide-react';
 
