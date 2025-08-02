@@ -158,73 +158,74 @@ const Projects: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Projects Management</h1>
-              <p className="text-gray-600">Manage your engineering projects and resources</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Projects Management</h1>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">Manage your engineering projects and resources</p>
             </div>
             <div className="flex space-x-3">
-              <Button onClick={() => setShowProjectForm(true)} className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="h-4 w-4 mr-2" />
-                New Project
+              <Button onClick={() => setShowProjectForm(true)} className="bg-blue-600 hover:bg-blue-700 px-3 py-2 sm:px-4 w-full sm:w-auto justify-center">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">New Project</span>
+                <span className="sm:hidden">New</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-blue-600" />
+                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Projects</p>
-                <p className="text-2xl font-bold text-gray-900">{projects.length}</p>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Projects</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{projects.length}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Projects</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Active Projects</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">
                   {projects.filter(p => p.status === 'active').length}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="h-6 w-6 text-yellow-600" />
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">In Planning</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">In Planning</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">
                   {projects.filter(p => p.status === 'planning').length}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <Users className="h-6 w-6 text-purple-600" />
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">
                   {projects.filter(p => p.status === 'completed').length}
                 </p>
               </div>
@@ -233,26 +234,26 @@ const Projects: React.FC = () => {
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow-md mb-6 p-6">
+        <div className="bg-white rounded-lg shadow-md mb-6 p-4 sm:p-6">
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search projects by name, description, or required skills..."
+                placeholder="Search projects..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               />
             </div>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
               <div className="flex items-center space-x-2">
                 <Filter className="h-4 w-4 text-gray-400" />
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="border border-gray-300 rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
                 >
                   <option value="">All Status</option>
                   <option value="planning">Planning</option>
@@ -264,7 +265,7 @@ const Projects: React.FC = () => {
               <select
                 value={skillFilter}
                 onChange={(e) => setSkillFilter(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="border border-gray-300 rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
               >
                 <option value="">All Skills</option>
                 {allProjectSkills.map(skill => (
@@ -275,7 +276,7 @@ const Projects: React.FC = () => {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="border border-gray-300 rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
               >
                 <option value="name">Sort by Name</option>
                 <option value="startDate">Sort by Start Date</option>
@@ -283,7 +284,7 @@ const Projects: React.FC = () => {
                 <option value="status">Sort by Status</option>
               </select>
 
-              <div className="text-sm text-gray-600 flex items-center">
+              <div className="text-xs sm:text-sm text-gray-600 flex items-center pt-2 sm:pt-0">
                 Showing {filteredProjects.length} of {projects.length} projects
               </div>
             </div>
@@ -292,11 +293,11 @@ const Projects: React.FC = () => {
 
         {/* Projects Table */}
         <div className="bg-white rounded-lg shadow-md mb-6">
-          <div className="p-6">
-            <div className="rounded-md border">
+          <div className="p-4 sm:p-6">
+            <div className="rounded-md border overflow-hidden">
               {filteredProjects.length === 0 ? (
-                <div className="text-center py-12">
-                  <Calendar className="mx-auto h-12 w-12 text-gray-400" />
+                <div className="text-center py-8 sm:py-12">
+                  <Calendar className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
                   <h3 className="mt-2 text-sm font-medium text-gray-900">No projects found</h3>
                   <p className="mt-1 text-sm text-gray-500">
                     {projects.length === 0 
@@ -306,88 +307,103 @@ const Projects: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Project Details</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Required Skills</TableHead>
-                      <TableHead>Timeline</TableHead>
-                      <TableHead>Team Size</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredProjects.map((project: any) => (
-                      <TableRow key={project._id} className="hover:bg-gray-50">
-                        <TableCell>
-                          <div>
-                            <div className="font-medium text-gray-900">{project.name}</div>
-                            <div className="text-sm text-gray-500 mt-1">
-                              {project.description}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            {getStatusIcon(project.status)}
-                            <Badge variant={
-                              project.status === 'active' ? 'success' :
-                              project.status === 'planning' ? 'warning' :
-                              project.status === 'completed' ? 'default' :
-                              project.status === 'on-hold' ? 'destructive' :
-                              'secondary'
-                            }>
-                              {project.status}
-                            </Badge>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {project.requiredSkills?.slice(0, 3).map((skill: string) => (
-                              <Badge
-                                key={skill}
-                                variant="default"
-                              >
-                                {skill}
-                              </Badge>
-                            )) || <span className="text-sm text-gray-400">No skills specified</span>}
-                            {project.requiredSkills?.length > 3 && (
-                              <Badge variant="secondary">
-                                +{project.requiredSkills.length - 3}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            <div className="font-medium">{formatDate(project.startDate)}</div>
-                            <div className="text-gray-500">to {formatDate(project.endDate)}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            <div className="font-medium">
-                              {project.currentTeamSize} / {project.teamSize || 0}
-                            </div>
-                            <div className="text-gray-500">assigned</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditProject(project)}
-                            className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="min-w-[200px] sm:min-w-[250px]">Project Details</TableHead>
+                        <TableHead className="hidden sm:table-cell">Status</TableHead>
+                        <TableHead className="hidden lg:table-cell">Required Skills</TableHead>
+                        <TableHead className="hidden md:table-cell">Timeline</TableHead>
+                        <TableHead className="hidden sm:table-cell">Team Size</TableHead>
+                        <TableHead className="w-20">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredProjects.map((project: any) => (
+                        <TableRow key={project._id} className="hover:bg-gray-50">
+                          <TableCell className="min-w-[200px] sm:min-w-[250px]">
+                            <div>
+                              <div className="font-medium text-gray-900 truncate max-w-[150px] sm:max-w-[200px] lg:max-w-[300px]">{project.name}</div>
+                              <div className="text-xs sm:text-sm text-gray-500 mt-1 truncate max-w-[150px] sm:max-w-[200px] lg:max-w-[300px]">
+                                {project.description}
+                              </div>
+                              {/* Mobile-only status */}
+                              <div className="sm:hidden mt-2 flex items-center space-x-2">
+                                {getStatusIcon(project.status)}
+                                <Badge variant={
+                                  project.status === 'active' ? 'success' :
+                                  project.status === 'planning' ? 'warning' :
+                                  project.status === 'completed' ? 'default' :
+                                  project.status === 'on-hold' ? 'destructive' :
+                                  'secondary'
+                                } className="text-xs">
+                                  {project.status}
+                                </Badge>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            <div className="flex items-center space-x-2">
+                              {getStatusIcon(project.status)}
+                              <Badge variant={
+                                project.status === 'active' ? 'success' :
+                                project.status === 'planning' ? 'warning' :
+                                project.status === 'completed' ? 'default' :
+                                project.status === 'on-hold' ? 'destructive' :
+                                'secondary'
+                              } className="text-xs">
+                                {project.status}
+                              </Badge>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            <div className="flex flex-wrap gap-1">
+                              {project.requiredSkills?.slice(0, 2).map((skill: string) => (
+                                <Badge
+                                  key={skill}
+                                  variant="default"
+                                  className="text-xs"
+                                >
+                                  {skill}
+                                </Badge>
+                              )) || <span className="text-xs text-gray-400">No skills specified</span>}
+                              {project.requiredSkills?.length > 2 && (
+                                <Badge variant="secondary" className="text-xs">
+                                  +{project.requiredSkills.length - 2}
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            <div className="text-xs sm:text-sm">
+                              <div className="font-medium">{formatDate(project.startDate)}</div>
+                              <div className="text-gray-500">to {formatDate(project.endDate)}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            <div className="text-xs sm:text-sm">
+                              <div className="font-medium">
+                                {project.teamSize || 0}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditProject(project)}
+                              className="text-blue-600 border-blue-600 hover:bg-blue-50 p-1 sm:p-2"
+                            >
+                              <Edit className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                              <span className="hidden sm:inline text-xs">Edit</span>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </div>
           </div>
@@ -396,17 +412,17 @@ const Projects: React.FC = () => {
 
       {/* Project Form Modal */}
       {showProjectForm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-[600px] shadow-lg rounded-md bg-white">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 p-4">
+          <div className="relative top-4 sm:top-20 mx-auto p-4 sm:p-5 border w-full max-w-[600px] shadow-lg rounded-md bg-white">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">
+              <h3 className="text-base sm:text-lg font-medium">
                 {editingProject ? 'Edit Project' : 'Create Project'}
               </h3>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowProjectForm(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 p-1"
               >
                 ×
               </Button>

@@ -4,13 +4,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
-import type { Project, ProjectFormData } from '../../types';
+import type { Project } from '../../types';
 import { X, AlertCircle, Plus, Minus } from 'lucide-react';
 
 // Validation schema with proper date validation
 const projectSchema = z.object({
   name: z.string().min(1, 'Project name is required').max(100),
-  description: z.string().min(1, 'Description is required').max(500),
+  description: z.string().min(1, 'Description is required').max(250),
   startDate: z.string().min(1, 'Start date is required'),
   endDate: z.string().min(1, 'End date is required'),
   teamSize: z.number().min(1, 'Team size must be at least 1').max(50, 'Team size cannot exceed 50'),

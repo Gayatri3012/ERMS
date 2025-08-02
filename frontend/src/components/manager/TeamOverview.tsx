@@ -76,13 +76,12 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({
     filteredEngineers = filteredEngineers.slice(0, maxRows);
   }
 
-  const getCapacityStatus = (allocated: number, max: number) => {
-    const percentage = (allocated / max) * 100;
-    if (percentage > 100) return 'Overloaded';
-    if (percentage >= 90) return 'At Capacity';
-    if (percentage >= 70) return 'High Load';
-    return 'Available';
-  };
+const getCapacityStatus = (allocated: number, max: number) => {
+  if (allocated > max) return 'Overloaded';
+  if (allocated >= max * 0.9) return 'At Capacity';
+  if (allocated >= max * 0.7) return 'High Load';
+  return 'Available';
+};
 
   const getCapacityBadgeVariant = (allocated: number, max: number) => {
     const percentage = (allocated / max) * 100;

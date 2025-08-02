@@ -80,62 +80,105 @@ const Dashboard: React.FC = () => {
     });
   };
 
-  const getCapacityAlerts = () => {
-    const engineersWithCapacity = calculateEngineersCapacity(engineers, assignments);
-    
-    const alerts: User[] = engineersWithCapacity
-      .filter(engineer => 
-        engineer.capacityInfo.totalAllocated > engineer.maxCapacity || 
-        engineer.capacityInfo.totalAllocated < 30
-      )
-      .map(engineer => ({
-        ...engineer,
-        currentUtilization: engineer.capacityInfo.totalAllocated
-      } as User & { currentUtilization: number }));
-    
-    setCapacityAlerts(alerts);
-  };
+const getCapacityAlerts = () => {
+  const engineersWithCapacity = calculateEngineersCapacity(engineers, assignments);
+  
+  const alerts = engineersWithCapacity
+    .filter(engineer => {
+      const utilization = engineer.capacityInfo.totalAllocated;
+      const maxCapacity = engineer.maxCapacity;
+      
+      // Critical: Over capacity
+      if (utilization > maxCapacity) return true;
+      
+      // Warning: Very close to over capacity (>95%)
+      if (utilization > maxCapacity * 0.95) return true;
+      
+      // Optional: Severely under-utilized (adjust threshold as needed)
+      if (utilization < 10 && utilization > 0) return true;
+      
+      return false;
+    })
+    .map(engineer => ({
+      ...engineer,
+      currentUtilization: engineer.capacityInfo.totalAllocated,
+      alertType: engineer.capacityInfo.totalAllocated > engineer.maxCapacity 
+        ? 'overloaded' 
+        : engineer.capacityInfo.totalAllocated > engineer.maxCapacity * 0.95
+        ? 'near-capacity'
+        : 'underutilized'
+    }));
+  
+  setCapacityAlerts(alerts);
+};
 
   const prepareChartData = () => {
-    const engineersWithCapacity = calculateEngineersCapacity(engineers, assignments);
+  const engineersWithCapacity = calculateEngineersCapacity(engineers, assignments);
+  
+  // Define consistent thresholds
+  const UNDERUTILIZED_THRESHOLD = 10; // Match with alerts
+  const OPTIMAL_THRESHOLD = 80; // You can adjust this
+  
+  // Utilization distribution data for pie chart
+  const utilizationRanges = [
+    { name: 'Under-utilized', count: 0, fill: '#ef4444' },
+    { name: 'Optimal', count: 0, fill: '#22c55e' },
+    { name: 'High', count: 0, fill: '#f59e0b' },
+    { name: 'Overloaded', count: 0, fill: '#dc2626' }
+  ];
+
+  engineersWithCapacity.forEach(engineer => {
+    const utilization = engineer.capacityInfo.totalAllocated;
+    const maxCapacity = engineer.maxCapacity;
     
-    // Utilization distribution data for pie chart
-    const utilizationRanges = [
-      { name: 'Under-utilized', count: 0, fill: '#ef4444' },
-      { name: 'Optimal', count: 0, fill: '#22c55e' },
-      { name: 'High', count: 0, fill: '#f59e0b' },
-      { name: 'Overloaded', count: 0, fill: '#dc2626' }
-    ];
+    // Use consistent logic with capacity alerts
+    if (utilization < UNDERUTILIZED_THRESHOLD) {
+      utilizationRanges[0].count++; // Under-utilized
+    } else if (utilization <= OPTIMAL_THRESHOLD) {
+      utilizationRanges[1].count++; // Optimal
+    } else if (utilization <= maxCapacity) {
+      utilizationRanges[2].count++; // High (but within max capacity)
+    } else {
+      utilizationRanges[3].count++; // Overloaded (exceeds max capacity)
+    }
+  });
 
-    engineersWithCapacity.forEach(engineer => {
-      const utilization = engineer.capacityInfo.totalAllocated;
-      if (utilization < 30) utilizationRanges[0].count++;
-      else if (utilization <= 80) utilizationRanges[1].count++;
-      else if (utilization <= 100) utilizationRanges[2].count++;
-      else utilizationRanges[3].count++;
-    });
+  setUtilizationData(utilizationRanges.filter(range => range.count > 0));
 
-    setUtilizationData(utilizationRanges.filter(range => range.count > 0));
+  // Individual engineer utilization for bar chart
+  const chartData = engineersWithCapacity.map(engineer => {
+    const utilization = engineer.capacityInfo.totalAllocated;
+    const maxCapacity = engineer.maxCapacity;
+    
+    // Use consistent status logic
+    let status: string;
+    let fill: string;
+    
+    if (utilization > maxCapacity) {
+      status = 'overloaded';
+      fill = '#dc2626'; // Red
+    } else if (utilization < UNDERUTILIZED_THRESHOLD) {
+      status = 'underutilized';
+      fill = '#ef4444'; // Light red
+    } else if (utilization > maxCapacity * 0.95) {
+      status = 'near-capacity';
+      fill = '#f59e0b'; // Orange
+    } else {
+      status = 'optimal';
+      fill = '#22c55e'; // Green
+    }
+    
+    return {
+      name: engineer.name.split(' ')[0],
+      utilization: Math.round(utilization),
+      maxCapacity: maxCapacity,
+      status,
+      fill
+    };
+  });
 
-    // Individual engineer utilization for bar chart
-    const chartData = engineersWithCapacity.map(engineer => {
-      const status = engineer.capacityInfo.totalAllocated > engineer.maxCapacity ? 'overloaded' : 
-                    engineer.capacityInfo.totalAllocated < 30 ? 'underutilized' : 'optimal';
-      
-      return {
-        name: engineer.name.split(' ')[0],
-        utilization: Math.round(engineer.capacityInfo.totalAllocated),
-        maxCapacity: engineer.maxCapacity,
-        status,
-        fill: status === 'overloaded' ? '#dc2626' : 
-              status === 'underutilized' ? '#ef4444' : '#22c55e'
-      };
-    });
-
-    setChartData(chartData);
-  };
-
-
+  setChartData(chartData);
+};
 
   // Custom tooltip for bar chart
   const CustomBarTooltip = ({ active, payload, label }: any) => {
@@ -288,7 +331,7 @@ const Dashboard: React.FC = () => {
           <div className="space-y-6">
             {/* Capacity Alerts */}
             {capacityAlerts.length > 0 && (
-              <Alert className="border-red-200 bg-red-100">
+              <Alert className="border-red-200 bg-red-100" variant='destructive'>
                 <AlertDescription>
                   <div className="space-y-2">
                     <div className='flex gap-2'>
