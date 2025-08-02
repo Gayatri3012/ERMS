@@ -224,93 +224,94 @@ const Assignments: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Assignments Management</h1>
-              <p className="text-gray-600">Manage engineer assignments and resource allocation</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Assignments Management</h1>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">Manage engineer assignments and resource allocation</p>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
               <div className="flex items-center bg-gray-100 rounded-lg p-1">
                 <Button
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('list')}
-                  className="px-3"
+                  className="px-2 sm:px-3 flex-1 sm:flex-none"
                 >
-                  <List className="h-4 w-4 mr-1" />
-                  List
+                  <List className="h-4 w-4 sm:mr-1" />
+                  <span className="text-xs sm:text-sm">List</span>
                 </Button>
                 <Button
                   variant={viewMode === 'calendar' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('calendar')}
-                  className="px-3"
+                  className="px-2 sm:px-3 flex-1 sm:flex-none"
                 >
-                  <CalendarDays className="h-4 w-4 mr-1" />
-                  Calendar
+                  <CalendarDays className="h-4 w-4 sm:mr-1" />
+                  <span className="text-xs sm:text-sm">Calendar</span>
                 </Button>
               </div>
-              <Button onClick={() => setShowAssignmentForm(true)} className="bg-green-600 hover:bg-green-700">
-                <Plus className="h-4 w-4 mr-2" />
-                New Assignment
+              <Button onClick={() => setShowAssignmentForm(true)} className="bg-green-600 hover:bg-green-700 w-full sm:w-auto justify-center">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">New Assignment</span>
+                <span className="sm:hidden">New</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="h-6 w-6 text-blue-600" />
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Assignments</p>
-                <p className="text-2xl font-bold text-gray-900">{assignments.length}</p>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Assignments</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{assignments.length}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Active</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">
                   {enhancedAssignments.filter(a => a.status === 'active').length}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="h-6 w-6 text-yellow-600" />
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Upcoming</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Upcoming</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">
                   {enhancedAssignments.filter(a => a.status === 'upcoming').length}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 bg-gray-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-gray-600" />
+                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">
                   {enhancedAssignments.filter(a => a.status === 'completed').length}
                 </p>
               </div>
@@ -319,14 +320,14 @@ const Assignments: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-md mb-6 p-6">
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-gray-400" />
+        <div className="bg-white rounded-lg shadow-md mb-6 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-start sm:items-center">
+            <div className="flex items-center space-x-2 w-full sm:w-auto">
+              <Filter className="h-4 w-4 text-gray-400 flex-shrink-0" />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="border border-gray-300 rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
               >
                 <option value="">All Status</option>
                 <option value="upcoming">Upcoming</option>
@@ -336,7 +337,7 @@ const Assignments: React.FC = () => {
               </select>
             </div>
 
-            <div className="text-sm text-gray-600 flex items-center ml-auto">
+            <div className="text-xs sm:text-sm text-gray-600 flex items-center sm:ml-auto">
               Showing {filteredAssignments.length} of {assignments.length} assignments
             </div>
           </div>
@@ -345,11 +346,11 @@ const Assignments: React.FC = () => {
         {/* List View */}
         {viewMode === 'list' && (
           <div className="bg-white rounded-lg shadow-md mb-6">
-            <div className="p-6">
-              <div className="rounded-md border">
+            <div className="p-4 sm:p-6">
+              <div className="rounded-md border overflow-hidden">
                 {filteredAssignments.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Calendar className="mx-auto h-12 w-12 text-gray-400" />
+                  <div className="text-center py-8 sm:py-12">
+                    <Calendar className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
                     <h3 className="mt-2 text-sm font-medium text-gray-900">No assignments found</h3>
                     <p className="mt-1 text-sm text-gray-500">
                       {assignments.length === 0 
@@ -359,91 +360,93 @@ const Assignments: React.FC = () => {
                     </p>
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Engineer</TableHead>
-                        <TableHead>Project</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Allocation</TableHead>
-                        <TableHead>Timeline</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredAssignments.map((assignment: any) => (
-                        <TableRow key={assignment._id} className="hover:bg-gray-50">
-                          <TableCell>
-                            <div>
-                              <div className="font-medium text-gray-900">{assignment.engineerName}</div>
-                              <div className="text-sm text-gray-500">
-                                {assignment.engineer?.skills?.slice(0, 2).join(', ') || 'No skills listed'}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium text-gray-900">{assignment.projectName}</div>
-                              <div className="text-sm text-gray-500">
-                                {assignment.project?.status || 'Unknown status'}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">
-                              {assignment.role}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              {getStatusIcon(assignment.status)}
-                              <Badge variant={getStatusColor(assignment.status) as any}>
-                                {assignment.status}
-                              </Badge>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              <div className="font-medium">{assignment.allocationPercentage}%</div>
-                              <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                                <div 
-                                  className="bg-blue-600 h-2 rounded-full"
-                                  style={{width: `${assignment.allocationPercentage}%`}}
-                                ></div>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              <div className="font-medium">{formatDate(assignment.startDate)}</div>
-                              <div className="text-gray-500">to {formatDate(assignment.endDate)}</div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEditAssignment(assignment)}
-                                className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDeleteAssignment(assignment._id)}
-                                className="text-red-600 border-red-600 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="min-w-[150px] sm:min-w-[180px]">Engineer</TableHead>
+                          <TableHead className="min-w-[150px] sm:min-w-[180px]">Project</TableHead>
+                          <TableHead className="min-w-[80px]">Role</TableHead>
+                          <TableHead className="min-w-[100px]">Status</TableHead>
+                          <TableHead className="min-w-[100px]">Allocation</TableHead>
+                          <TableHead className="min-w-[140px]">Timeline</TableHead>
+                          <TableHead className="min-w-[120px]">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredAssignments.map((assignment: any) => (
+                          <TableRow key={assignment._id} className="hover:bg-gray-50">
+                            <TableCell className="min-w-[150px] sm:min-w-[180px]">
+                              <div>
+                                <div className="font-medium text-gray-900 truncate max-w-[120px] sm:max-w-[150px]">{assignment.engineerName}</div>
+                                <div className="text-xs sm:text-sm text-gray-500 truncate max-w-[120px] sm:max-w-[150px]">
+                                  {assignment.engineer?.skills?.slice(0, 2).join(', ') || 'No skills listed'}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="min-w-[150px] sm:min-w-[180px]">
+                              <div>
+                                <div className="font-medium text-gray-900 truncate max-w-[120px] sm:max-w-[150px]">{assignment.projectName}</div>
+                                <div className="text-xs sm:text-sm text-gray-500">
+                                  {assignment.project?.status || 'Unknown status'}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="min-w-[80px]">
+                              <Badge variant="outline" className="text-xs">
+                                {assignment.role}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="min-w-[100px]">
+                              <div className="flex items-center space-x-2">
+                                {getStatusIcon(assignment.status)}
+                                <Badge variant={getStatusColor(assignment.status) as any} className="text-xs">
+                                  {assignment.status}
+                                </Badge>
+                              </div>
+                            </TableCell>
+                            <TableCell className="min-w-[100px]">
+                              <div className="text-xs sm:text-sm">
+                                <div className="font-medium">{assignment.allocationPercentage}%</div>
+                                <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                  <div 
+                                    className="bg-blue-600 h-2 rounded-full"
+                                    style={{width: `${assignment.allocationPercentage}%`}}
+                                  ></div>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="min-w-[140px]">
+                              <div className="text-xs sm:text-sm">
+                                <div className="font-medium">{formatDate(assignment.startDate)}</div>
+                                <div className="text-gray-500">to {formatDate(assignment.endDate)}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="min-w-[120px]">
+                              <div className="flex space-x-1 sm:space-x-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEditAssignment(assignment)}
+                                  className="text-blue-600 border-blue-600 hover:bg-blue-50 p-1 sm:p-2"
+                                >
+                                  <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDeleteAssignment(assignment._id)}
+                                  className="text-red-600 border-red-600 hover:bg-red-50 p-1 sm:p-2"
+                                >
+                                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
               </div>
             </div>
@@ -453,11 +456,11 @@ const Assignments: React.FC = () => {
         {/* Calendar View */}
         {viewMode === 'calendar' && (
           <div className="bg-white rounded-lg shadow-md mb-6">
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {/* Calendar Header with Navigation */}
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-gray-900">{calendarData.monthName}</h3>
-                <div className="flex items-center space-x-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-3 sm:space-y-0">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center sm:text-left">{calendarData.monthName}</h3>
+                <div className="flex items-center justify-center space-x-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -470,7 +473,7 @@ const Assignments: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => setSelectedDate(new Date())}
-                    className="px-4 py-2 text-sm hover:bg-gray-100"
+                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm hover:bg-gray-100"
                   >
                     Today
                   </Button>
@@ -485,81 +488,82 @@ const Assignments: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-7 gap-1">
-                {/* Day headers */}
-                {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
-                  <div key={day} className="p-3 text-center text-sm font-semibold text-gray-700 bg-gray-50 rounded-t">
-                    {day.slice(0, 3)}
+              {/* Calendar Grid Container with Scroll */}
+              <div className="w-full overflow-x-auto">
+                <div className="min-w-[600px] sm:min-w-[700px] md:min-w-[800px] lg:min-w-full">
+                  <div className="grid grid-cols-7 gap-1">
+                    {/* Day headers */}
+                    {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
+                      <div key={day} className="p-3 text-center text-sm font-semibold text-gray-700 bg-gray-50 rounded-t">
+                        <span className="hidden sm:inline">{day}</span>
+                        <span className="sm:hidden">{day.slice(0, 3)}</span>
+                      </div>
+                    ))}
+                    
+                    {/* Calendar days */}
+                    {calendarData.days.map((day, index) => (
+                      <div 
+                        key={index} 
+                        className={`min-h-[120px] sm:min-h-[140px] md:min-h-[160px] lg:min-h-[180px] xl:min-h-[200px] p-2 border border-gray-200 bg-white hover:bg-gray-50 transition-colors ${
+                          day?.isToday ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+                        }`}
+                      >
+                        {day && (
+                          <>
+                            <div className={`text-sm font-semibold mb-2 ${
+                              day.isToday ? 'text-blue-600' : 'text-gray-900'
+                            }`}>
+                              {day.date}
+                            </div>
+                            <div className="space-y-1 overflow-y-auto max-h-[calc(100%-2rem)]">
+                              {day.assignments.map((assignment, idx) => (
+                                <div
+                                  key={idx}
+                                  className="text-xs p-2 rounded cursor-pointer hover:shadow-sm transition-shadow border"
+                                  style={{
+                                    backgroundColor: assignment.status === 'active' ? '#dcfce7' : 
+                                                   assignment.status === 'upcoming' ? '#dbeafe' : 
+                                                   assignment.status === 'overdue' ? '#fee2e2' : '#f3f4f6',
+                                    color: assignment.status === 'active' ? '#166534' : 
+                                           assignment.status === 'upcoming' ? '#1e40af' : 
+                                           assignment.status === 'overdue' ? '#991b1b' : '#374151',
+                                    borderColor: assignment.status === 'active' ? '#10b981' : 
+                                               assignment.status === 'upcoming' ? '#3b82f6' : 
+                                               assignment.status === 'overdue' ? '#ef4444' : '#d1d5db'
+                                  }}
+                                  title={`${assignment.engineerName} - ${assignment.projectName} (${assignment.allocationPercentage}%)`}
+                                >
+                                  <div className="font-medium truncate text-xs">
+                                    {assignment.engineerName}
+                                  </div>
+                                  <div className="truncate opacity-90 mt-1 text-xs">
+                                    {assignment.projectName}
+                                  </div>
+                                  <div className="flex items-center justify-between mt-1">
+                                    <span className="opacity-75 text-xs">{assignment.allocationPercentage}%</span>
+                                    <span className="text-xs px-1 py-0.5 rounded" style={{
+                                      backgroundColor: assignment.status === 'active' ? '#22c55e' : 
+                                                     assignment.status === 'upcoming' ? '#3b82f6' : 
+                                                     assignment.status === 'overdue' ? '#ef4444' : '#6b7280',
+                                      color: 'white'
+                                    }}>
+                                      {assignment.status.charAt(0).toUpperCase()}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                              {day.assignments.length === 0 && (
+                                <div className="text-xs text-gray-400 italic text-center py-4">
+                                  No assignments
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-                
-                {/* Calendar days */}
-                {calendarData.days.map((day, index) => (
-                  <div 
-                    key={index} 
-                    className={`min-h-[120px] p-2 border border-gray-200 bg-white hover:bg-gray-50 transition-colors ${
-                      day?.isToday ? 'ring-2 ring-blue-500 bg-blue-50' : ''
-                    }`}
-                  >
-                    {day && (
-                      <>
-                        <div className={`text-sm font-semibold mb-2 ${
-                          day.isToday ? 'text-blue-600' : 'text-gray-900'
-                        }`}>
-                          {day.date}
-                        </div>
-                        <div className="space-y-1">
-                          {day.assignments.slice(0, 3).map((assignment, idx) => (
-                            <div
-                              key={idx}
-                              className="text-xs p-2 rounded cursor-pointer hover:shadow-sm transition-shadow border"
-                              style={{
-                                backgroundColor: assignment.status === 'active' ? '#dcfce7' : 
-                                               assignment.status === 'upcoming' ? '#dbeafe' : 
-                                               assignment.status === 'overdue' ? '#fee2e2' : '#f3f4f6',
-                                color: assignment.status === 'active' ? '#166534' : 
-                                       assignment.status === 'upcoming' ? '#1e40af' : 
-                                       assignment.status === 'overdue' ? '#991b1b' : '#374151',
-                                borderColor: assignment.status === 'active' ? '#10b981' : 
-                                           assignment.status === 'upcoming' ? '#3b82f6' : 
-                                           assignment.status === 'overdue' ? '#ef4444' : '#d1d5db'
-                              }}
-                              title={`${assignment.engineerName} - ${assignment.projectName} (${assignment.allocationPercentage}%)`}
-                            >
-                              <div className="font-medium truncate">
-                                {assignment.engineerName}
-                              </div>
-                              <div className="truncate opacity-90 mt-1">
-                                {assignment.projectName}
-                              </div>
-                              <div className="flex items-center justify-between mt-1">
-                                <span className="opacity-75">{assignment.allocationPercentage}%</span>
-                                <span className="text-xs px-1 py-0.5 rounded" style={{
-                                  backgroundColor: assignment.status === 'active' ? '#22c55e' : 
-                                                 assignment.status === 'upcoming' ? '#3b82f6' : 
-                                                 assignment.status === 'overdue' ? '#ef4444' : '#6b7280',
-                                  color: 'white'
-                                }}>
-                                  {assignment.status.charAt(0).toUpperCase()}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                          {day.assignments.length > 3 && (
-                            <div className="text-xs text-gray-500 bg-gray-100 p-1 rounded text-center">
-                              +{day.assignments.length - 3} more
-                            </div>
-                          )}
-                          {day.assignments.length === 0 && (
-                            <div className="text-xs text-gray-400 italic text-center py-4">
-                              No assignments
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))}
+                </div>
               </div>
             </div>
           </div>

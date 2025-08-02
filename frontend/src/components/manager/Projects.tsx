@@ -284,6 +284,20 @@ const Projects: React.FC = () => {
                 <option value="status">Sort by Status</option>
               </select>
 
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSearchTerm('');
+                  setStatusFilter('');
+                  setSkillFilter('');
+                  setSortBy('name');
+                }}
+                className="text-gray-600 border-gray-300 hover:bg-gray-50 px-2 sm:px-3 py-1 text-xs sm:text-sm w-full sm:w-auto"
+              >
+                Clear Filters
+              </Button>
+
               <div className="text-xs sm:text-sm text-gray-600 flex items-center pt-2 sm:pt-0">
                 Showing {filteredProjects.length} of {projects.length} projects
               </div>
@@ -312,11 +326,11 @@ const Projects: React.FC = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="min-w-[200px] sm:min-w-[250px]">Project Details</TableHead>
-                        <TableHead className="hidden sm:table-cell">Status</TableHead>
-                        <TableHead className="hidden lg:table-cell">Required Skills</TableHead>
-                        <TableHead className="hidden md:table-cell">Timeline</TableHead>
-                        <TableHead className="hidden sm:table-cell">Team Size</TableHead>
-                        <TableHead className="w-20">Actions</TableHead>
+                        <TableHead className="min-w-[120px]">Status</TableHead>
+                        <TableHead className="min-w-[150px]">Required Skills</TableHead>
+                        <TableHead className="min-w-[140px]">Timeline</TableHead>
+                        <TableHead className="min-w-[100px]">Team Size</TableHead>
+                        <TableHead className="min-w-[80px]">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -328,22 +342,9 @@ const Projects: React.FC = () => {
                               <div className="text-xs sm:text-sm text-gray-500 mt-1 truncate max-w-[150px] sm:max-w-[200px] lg:max-w-[300px]">
                                 {project.description}
                               </div>
-                              {/* Mobile-only status */}
-                              <div className="sm:hidden mt-2 flex items-center space-x-2">
-                                {getStatusIcon(project.status)}
-                                <Badge variant={
-                                  project.status === 'active' ? 'success' :
-                                  project.status === 'planning' ? 'warning' :
-                                  project.status === 'completed' ? 'default' :
-                                  project.status === 'on-hold' ? 'destructive' :
-                                  'secondary'
-                                } className="text-xs">
-                                  {project.status}
-                                </Badge>
-                              </div>
                             </div>
                           </TableCell>
-                          <TableCell className="hidden sm:table-cell">
+                          <TableCell className="min-w-[120px]">
                             <div className="flex items-center space-x-2">
                               {getStatusIcon(project.status)}
                               <Badge variant={
@@ -357,7 +358,7 @@ const Projects: React.FC = () => {
                               </Badge>
                             </div>
                           </TableCell>
-                          <TableCell className="hidden lg:table-cell">
+                          <TableCell className="min-w-[150px]">
                             <div className="flex flex-wrap gap-1">
                               {project.requiredSkills?.slice(0, 2).map((skill: string) => (
                                 <Badge
@@ -375,20 +376,20 @@ const Projects: React.FC = () => {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="hidden md:table-cell">
+                          <TableCell className="min-w-[140px]">
                             <div className="text-xs sm:text-sm">
                               <div className="font-medium">{formatDate(project.startDate)}</div>
                               <div className="text-gray-500">to {formatDate(project.endDate)}</div>
                             </div>
                           </TableCell>
-                          <TableCell className="hidden sm:table-cell">
+                          <TableCell className="min-w-[100px]">
                             <div className="text-xs sm:text-sm">
                               <div className="font-medium">
                                 {project.teamSize || 0}
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="min-w-[80px]">
                             <Button
                               variant="outline"
                               size="sm"
@@ -396,7 +397,7 @@ const Projects: React.FC = () => {
                               className="text-blue-600 border-blue-600 hover:bg-blue-50 p-1 sm:p-2"
                             >
                               <Edit className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-                              <span className="hidden sm:inline text-xs">Edit</span>
+                             
                             </Button>
                           </TableCell>
                         </TableRow>

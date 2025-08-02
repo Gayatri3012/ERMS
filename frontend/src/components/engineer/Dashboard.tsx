@@ -54,25 +54,25 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 lg:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 break-words">
             Welcome, {user.name}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
             Here's your current workload and upcoming assignments
           </p>
         </div>
 
         {/* Capacity Overview */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
               Current Capacity
             </h2>
-            <span className="text-sm text-gray-500">
+            <span className="text-xs sm:text-sm text-gray-500">
               {totalCapacity}% of {user.maxCapacity}% capacity
             </span>
           </div>
@@ -81,27 +81,27 @@ const Dashboard: React.FC = () => {
             max={user.maxCapacity!} 
             className="mb-4"
           />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
               <div className="flex items-center">
-                <User className="h-5 w-5 text-blue-600 mr-2" />
-                <span className="text-sm font-medium text-blue-900">
+                <User className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mr-2 flex-shrink-0" />
+                <span className="text-xs sm:text-sm font-medium text-blue-900">
                   {user.seniority} {user.role}
                 </span>
               </div>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg">
+            <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
               <div className="flex items-center">
-                <Clock className="h-5 w-5 text-green-600 mr-2" />
-                <span className="text-sm font-medium text-green-900">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mr-2 flex-shrink-0" />
+                <span className="text-xs sm:text-sm font-medium text-green-900">
                   {user.maxCapacity! - totalCapacity}% Available
                 </span>
               </div>
             </div>
-            <div className="bg-purple-50 p-4 rounded-lg">
+            <div className="bg-purple-50 p-3 sm:p-4 rounded-lg sm:col-span-2 lg:col-span-1">
               <div className="flex items-center">
-                <Calendar className="h-5 w-5 text-purple-600 mr-2" />
-                <span className="text-sm font-medium text-purple-900">
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 mr-2 flex-shrink-0" />
+                <span className="text-xs sm:text-sm font-medium text-purple-900">
                   {currentProjects.length} Active Projects
                 </span>
               </div>
@@ -110,7 +110,9 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Current Projects */}
-        <EngineerAssignments />
+        <div className="overflow-hidden">
+          <EngineerAssignments />
+        </div>
 
       </div>
     </div>

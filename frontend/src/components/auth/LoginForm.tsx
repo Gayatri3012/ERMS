@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useAuth } from '../context/AuthContext';
-import type { LoginFormData } from '../types';
+import { useAuth } from '../../context/AuthContext';
+import type { LoginFormData } from '../../types';
 
 // Validation schema
 const loginSchema = z.object({

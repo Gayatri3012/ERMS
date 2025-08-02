@@ -226,14 +226,14 @@ const Navigation: React.FC = () => {
                 </div>
               </div>
               <div className="mt-3 space-y-1">
-                <Link
-                  to={user.role === 'manager' ? '/manager/profile' : '/engineer/profile'}
+               { user.role != 'manager' && <Link
+                  to={'/engineer/profile'}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
                 >
                   <Settings className="h-5 w-5 mr-3" />
                   Profile Settings
-                </Link>
+                </Link>}
                 <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
