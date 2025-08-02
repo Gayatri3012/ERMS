@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useApp } from '../../context/AppContext';
-import type { AssignmentFormData } from '../../types';
+import type { Assignment, AssignmentFormData } from '../../types';
 import { X, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/shadcn-components';
 import { Alert, AlertDescription } from '@/components/ui/shadcn-components';
@@ -28,19 +28,23 @@ interface AssignmentFormProps {
   onClose: () => void;
   preselectedEngineerId?: string;
   onSuccess?: () => void;
+  assignment?: Assignment | null;
 }
 
 const AssignmentForm: React.FC<AssignmentFormProps> = ({
   isOpen,
   onClose,
   preselectedEngineerId,
-  onSuccess
+  onSuccess,
+  assignment
 }) => {
-  const { state, createAssignment, fetchEngineers, fetchProjects, fetchAssignments } = useApp();
+  const { state, createAssignment, updateAssignment, fetchEngineers, fetchProjects, fetchAssignments } = useApp();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedEngineer, setSelectedEngineer] = useState<string>('');
   const [capacityWarning, setCapacityWarning] = useState<string | null>(null);
+
+  const isEditing = !!assignment;
 
   const {
     register,
@@ -60,18 +64,61 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
   const watchedEngineerId = watch('engineerId');
   const watchedAllocation = watch('allocationPercentage');
 
+  // Helper function to extract ID from object or string
+  const extractId = (value: any): string => {
+    if (typeof value === 'string') return value;
+    if (value && typeof value === 'object' && value._id) return value._id;
+    return '';
+  };
+
+  // Helper function to format date for input field
+  const formatDateForInput = (dateString: string): string => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+  };
+
+  // Load form data when editing
+  useEffect(() => {
+    if (isOpen && assignment) {
+      const engineerId = extractId(assignment.engineerId);
+      const projectId = extractId(assignment.projectId);
+      
+      // Reset form with assignment data
+      reset({
+        engineerId,
+        projectId,
+        allocationPercentage: assignment.allocationPercentage,
+        startDate: formatDateForInput(assignment.startDate),
+        endDate: formatDateForInput(assignment.endDate),
+        role: assignment.role || 'Developer',
+      });
+      
+      setSelectedEngineer(engineerId);
+    } else if (isOpen && !assignment) {
+      // Reset form for new assignment
+      reset({
+        role: 'Developer',
+        allocationPercentage: 25,
+        engineerId: preselectedEngineerId || '',
+        projectId: '',
+        startDate: '',
+        endDate: '',
+      });
+      
+      if (preselectedEngineerId) {
+        setSelectedEngineer(preselectedEngineerId);
+      }
+    }
+  }, [isOpen, assignment, preselectedEngineerId, reset]);
+
   useEffect(() => {
     if (isOpen) {
       fetchEngineers();
       fetchProjects();
       fetchAssignments();
-      
-      if (preselectedEngineerId) {
-        setValue('engineerId', preselectedEngineerId);
-        setSelectedEngineer(preselectedEngineerId);
-      }
     }
-  }, [isOpen, preselectedEngineerId]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (watchedEngineerId) {
@@ -84,13 +131,20 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
     const engineer = state.engineers.find(e => e._id === engineerId);
     if (!engineer) return;
 
+    // Filter out current assignment when editing to avoid counting it twice
     const currentAssignments = state.assignments.filter(
-      assignment => assignment.engineerId === engineerId &&
-      new Date(assignment.endDate) > new Date()
+      assignmentItem => {
+        const assignmentEngineerId = extractId(assignmentItem.engineerId);
+        const isCurrentAssignment = isEditing && assignmentItem._id === assignment?._id;
+        
+        return assignmentEngineerId === engineerId &&
+               new Date(assignmentItem.endDate) > new Date() &&
+               !isCurrentAssignment;
+      }
     );
 
     const totalAllocated = currentAssignments.reduce(
-      (sum, assignment) => sum + assignment.allocationPercentage, 0
+      (sum, assignmentItem) => sum + assignmentItem.allocationPercentage, 0
     );
 
     const newTotal = totalAllocated + allocation;
@@ -113,13 +167,20 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
     const engineer = state.engineers.find(e => e._id === engineerId);
     if (!engineer) return null;
 
+    // Filter out current assignment when editing
     const currentAssignments = state.assignments.filter(
-      assignment => assignment.engineerId === engineerId &&
-      new Date(assignment.endDate) > new Date()
+      assignmentItem => {
+        const assignmentEngineerId = extractId(assignmentItem.engineerId);
+        const isCurrentAssignment = isEditing && assignmentItem._id === assignment?._id;
+        
+        return assignmentEngineerId === engineerId &&
+               new Date(assignmentItem.endDate) > new Date() &&
+               !isCurrentAssignment;
+      }
     );
 
     const totalAllocated = currentAssignments.reduce(
-      (sum, assignment) => sum + assignment.allocationPercentage, 0
+      (sum, assignmentItem) => sum + assignmentItem.allocationPercentage, 0
     );
 
     return {
@@ -134,20 +195,28 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
       setIsLoading(true);
       setError(null);
 
-      await createAssignment({
+      const assignmentData = {
         engineerId: data.engineerId,
         projectId: data.projectId,
         allocationPercentage: Number(data.allocationPercentage),
         startDate: data.startDate,
         endDate: data.endDate,
         role: data.role,
-      });
+      };
+
+      if (isEditing && assignment) {
+        // Update existing assignment
+        await updateAssignment(assignment._id, assignmentData);
+      } else {
+        // Create new assignment
+        await createAssignment(assignmentData);
+      }
 
       reset();
       onSuccess?.();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create assignment');
+      setError(err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} assignment`);
     } finally {
       setIsLoading(false);
     }
@@ -157,6 +226,7 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
     reset();
     setError(null);
     setCapacityWarning(null);
+    setSelectedEngineer('');
     onClose();
   };
 
@@ -168,7 +238,9 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
       <div className="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-gray-900">Create New Assignment</h3>
+          <h3 className="text-lg font-bold text-gray-900">
+            {isEditing ? 'Edit Assignment' : 'Create New Assignment'}
+          </h3>
           <Button
             variant="ghost"
             size="sm"
@@ -292,9 +364,11 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
               >
                 <option value="Developer">Developer</option>
                 <option value="Tech Lead">Tech Lead</option>
+                <option value="Technical Consultant">Technical Consultant</option>
                 <option value="Senior Developer">Senior Developer</option>
                 <option value="Architect">Architect</option>
                 <option value="DevOps Engineer">DevOps Engineer</option>
+                <option value="Database Engineer">Database Engineer</option>
                 <option value="QA Engineer">QA Engineer</option>
               </select>
               {errors.role && (
@@ -344,6 +418,7 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
               Cancel
             </Button>
             <Button
+            onClick={undefined}
               type="submit"
               disabled={isLoading}
               className="bg-blue-600 hover:bg-blue-700"
@@ -351,10 +426,10 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
               {isLoading ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Creating...
+                  {isEditing ? 'Updating...' : 'Creating...'}
                 </div>
               ) : (
-                'Create Assignment'
+                isEditing ? 'Update Assignment' : 'Create Assignment'
               )}
             </Button>
           </div>

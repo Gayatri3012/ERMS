@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
-import type { ProjectFormData } from '../../types';
+import type { Project, ProjectFormData } from '../../types';
 import { X, AlertCircle, Plus, Minus } from 'lucide-react';
 
 // Validation schema
@@ -14,7 +14,7 @@ const projectSchema = z.object({
   startDate: z.string().min(1, 'Start date is required'),
   endDate: z.string().min(1, 'End date is required'),
   teamSize: z.number().min(1, 'Team size must be at least 1').max(50, 'Team size cannot exceed 50'),
-  status: z.enum(['planning', 'active', 'completed']),
+  status: z.enum(['planning', 'active', 'on-hold', 'completed']),
 }).refine((data) => new Date(data.endDate) > new Date(data.startDate), {
   message: "End date must be after start date",
   path: ["endDate"],
@@ -24,7 +24,7 @@ interface ProjectFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-    editingProject?: Project | null;
+  project?: Project | null;
 }
 
 const SKILL_OPTIONS = [
@@ -36,18 +36,21 @@ const SKILL_OPTIONS = [
   'Spring Boot', 'Express.js', 'GraphQL', 'REST API', 'Microservices'
 ];
 
-const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSuccess }) => {
-  const { createProject } = useApp();
+const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSuccess, project }) => {
+  const { createProject, editProject } = useApp();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [skillSearchTerm, setSkillSearchTerm] = useState('');
 
+  const isEditing = Boolean(project);
+
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
@@ -56,6 +59,41 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSuccess })
       teamSize: 3,
     }
   });
+
+  // Format date for input field (YYYY-MM-DD)
+  const formatDateForInput = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+  };
+
+  // Initialize form with project data when editing
+  useEffect(() => {
+    if (project && isOpen) {
+      setValue('name', project.name || '');
+      setValue('description', project.description || '');
+      setValue('startDate', formatDateForInput(project.startDate));
+      setValue('endDate', formatDateForInput(project.endDate));
+      setValue('teamSize', project.teamSize || 3);
+      setValue('status', project.status || 'planning');
+      setSelectedSkills(project.requiredSkills || []);
+    } else if (!project && isOpen) {
+      // Reset form for new project
+      reset({
+        status: 'planning',
+        teamSize: 3,
+      });
+      setSelectedSkills([]);
+    }
+  }, [project, isOpen, setValue, reset]);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setError(null);
+      setSkillSearchTerm('');
+    }
+  }, [isOpen]);
 
   const filteredSkills = SKILL_OPTIONS.filter(skill =>
     skill.toLowerCase().includes(skillSearchTerm.toLowerCase()) &&
@@ -91,16 +129,18 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSuccess })
         teamSize: Number(data.teamSize),
         managerId: user?._id || '',
       };
+      console.log(projectData)
 
-      await createProject(projectData);
+      if (isEditing && project?._id) {
+        await editProject(project._id, projectData);
+      } else {
+        await createProject(projectData);
+      }
       
-      reset();
-      setSelectedSkills([]);
-      setSkillSearchTerm('');
+      handleClose();
       onSuccess?.();
-      onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create project');
+      setError(err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} project`);
     } finally {
       setIsLoading(false);
     }
@@ -120,7 +160,9 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSuccess })
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
       <div className="relative top-10 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-gray-900">Create New Project</h3>
+          <h3 className="text-lg font-bold text-gray-900">
+            {isEditing ? 'Edit Project' : 'Create New Project'}
+          </h3>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600"
@@ -321,10 +363,10 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, onSuccess })
               {isLoading ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Creating...
+                  {isEditing ? 'Updating...' : 'Creating...'}
                 </div>
               ) : (
-                'Create Project'
+                isEditing ? 'Update Project' : 'Create Project'
               )}
             </button>
           </div>

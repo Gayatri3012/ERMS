@@ -56,6 +56,18 @@ export interface Assignment {
   updatedAt?: string;
 }
 
+export interface CapacityInfo {
+  totalAllocated: number;
+  maxCapacity: number;
+  availableCapacity: number;
+  utilizationPercentage: number;
+}
+
+export interface EngineerWithCapacity extends Engineer {
+  capacityInfo: CapacityInfo;
+  currentAssignments: Assignment[];
+}
+
 // Auth context types
 export interface AuthContextType {
   user: User | null;
@@ -99,6 +111,7 @@ export interface ProjectFormData {
   endDate: string;
   requiredSkills: string[];
   teamSize: number;
+  managerId: string;
   status: 'planning' | 'active' | 'completed';
 }
 
@@ -111,13 +124,6 @@ export interface AssignmentFormData {
   role: string;
 }
 
-// Utility types
-export interface CapacityInfo {
-  current: number;
-  max: number;
-  available: number;
-  percentage: number;
-}
 
 export interface EngineerWithCapacity extends Engineer {
   capacityInfo: CapacityInfo;

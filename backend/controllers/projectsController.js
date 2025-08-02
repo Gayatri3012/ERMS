@@ -109,6 +109,8 @@ const getProjectById = async (req, res) => {
             }))
         };
 
+        
+
         res.status(200).json({
             success: true,
             project: projectData
@@ -122,9 +124,45 @@ const getProjectById = async (req, res) => {
         });
     }
 };
+const editProject = async (req, res) => {
+  try {
+    const projectId = req.params.id;
+    const updateData = req.body;
+
+    // Optional: Add validation to ensure only managers can edit
+    if (req.user.role !== 'manager') {
+      return res.status(403).json({ error: 'Access denied. Only managers can edit projects.' });
+    }
+
+    const updatedProject = await Project.findByIdAndUpdate(
+      projectId,
+      updateData,
+      { 
+        new: true, // Return the updated document
+        runValidators: true // Run schema validations
+      }
+    );
+
+    if (!updatedProject) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+            // Fetch created project with populated manager
+        const populatedProject = await Project.findById(updatedProject._id)
+            .populate('managerId', 'name email');
+    
+        res.status(200).json({
+            success: true,
+            project: populatedProject
+        });
+  } catch (error) {
+    console.error('Error updating project:', error);
+    res.status(400).json({ error: error.message });
+  }
+}
 
 module.exports = {
     getAllProjects,
     createProject,
-    getProjectById
+    getProjectById,
+    editProject
 };

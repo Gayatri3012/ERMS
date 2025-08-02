@@ -1,4 +1,6 @@
 const Assignment = require('../models/Assignment');
+const User = require('../models/User')
+const Project = require('../models/Project');
 
 const getAllAssignments = async (req, res) => {
     try {
@@ -41,76 +43,136 @@ const getAllAssignments = async (req, res) => {
         });
     }
 };
-
 const createAssignment = async (req, res) => {
     try {
+        console.log('Request body:', req.body); // Debug log
+        
         const { engineerId, projectId, allocationPercentage, startDate, endDate, role } = req.body;
-
+        
         // Validate required fields
         if (!engineerId || !projectId || !allocationPercentage || !startDate || !endDate) {
+            console.log('Missing required fields');
             return res.status(400).json({
                 success: false,
                 message: 'Please provide all required fields'
             });
         }
 
-        // Check if engineer exists and get their capacity
+        // Validate date format and logic
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid date format'
+            });
+        }
+        
+        if (start >= end) {
+            return res.status(400).json({
+                success: false,
+                message: 'End date must be after start date'
+            });
+        }
+
+        // Validate allocation percentage
+        if (allocationPercentage <= 0 || allocationPercentage > 100) {
+            return res.status(400).json({
+                success: false,
+                message: 'Allocation percentage must be between 1 and 100'
+            });
+        }
+
+        // Check if engineer exists
+        console.log('Looking for engineer:', engineerId);
         const engineer = await User.findOne({ _id: engineerId, role: 'engineer' });
+        
         if (!engineer) {
+            console.log('Engineer not found');
             return res.status(404).json({
                 success: false,
                 message: 'Engineer not found'
             });
         }
+        
+        console.log('Engineer found:', engineer.name, 'Max capacity:', engineer.maxCapacity);
 
-        // Find overlapping assignments
+        // Check if project exists
+        const project = await Project.findById(projectId); // Assuming you have a Project model
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: 'Project not found'
+            });
+        }
+
+        // Find overlapping assignments (corrected logic)
         const overlappingAssignments = await Assignment.find({
             engineerId,
             $or: [
                 {
-                    startDate: { $lte: new Date(startDate) },
-                    endDate: { $gte: new Date(startDate) }
+                    startDate: { $lte: start },
+                    endDate: { $gte: start }
                 },
                 {
-                    startDate: { $lte: new Date(endDate) },
-                    endDate: { $gte: new Date(endDate) }
+                    startDate: { $lte: end },
+                    endDate: { $gte: end }
+                },
+                {
+                    startDate: { $gte: start },
+                    endDate: { $lte: end }
                 }
             ]
         });
 
-        // Calculate total allocation for the period
+        console.log('Overlapping assignments found:', overlappingAssignments.length);
+
+        // Calculate total allocation
         const totalAllocation = overlappingAssignments.reduce((sum, assignment) => 
             sum + assignment.allocationPercentage, 0) + allocationPercentage;
 
-        // Check if total allocation exceeds capacity
+        console.log('Total allocation:', totalAllocation, 'Engineer capacity:', engineer.maxCapacity);
+
+        // Check capacity
         if (totalAllocation > engineer.maxCapacity) {
+            const available = engineer.maxCapacity - (totalAllocation - allocationPercentage);
             return res.status(400).json({
                 success: false,
-                message: `Assignment exceeds engineer's capacity. Available: ${engineer.maxCapacity - totalAllocation + allocationPercentage}%`
+                message: `Assignment exceeds engineer's capacity. Available: ${available}%`
             });
         }
 
         // Create assignment
-        const assignment = await Assignment.create({
+        console.log('Creating assignment...');
+        const assignmentData = {
             engineerId,
             projectId,
-            allocationPercentage,
-            startDate: new Date(startDate),
-            endDate: new Date(endDate),
+            allocationPercentage: Number(allocationPercentage),
+            startDate: start,
+            endDate: end,
             role: role || 'Developer'
-        });
+        };
+        
+        console.log('Assignment data:', assignmentData);
+        
+        const assignment = await Assignment.create(assignmentData);
+        console.log('Assignment created with ID:', assignment._id);
 
-        // Fetch created assignment with populated data
+        // Fetch populated assignment
         const populatedAssignment = await Assignment.findById(assignment._id)
             .populate('engineerId', 'name email skills seniority')
             .populate('projectId', 'name description status');
 
+        console.log('Assignment saved successfully');
+        
         res.status(201).json({
             success: true,
             assignment: populatedAssignment
         });
 
     } catch (error) {
+        console.error('Error creating assignment:', error);
         res.status(500).json({
             success: false,
             message: 'Error creating assignment',

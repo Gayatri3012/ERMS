@@ -22,14 +22,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/shadcn-components';
+import { calculateEngineersCapacity, getCapacitySummary } from '@/utils/engineerCapacity';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const { state, fetchEngineers, fetchProjects, fetchAssignments } = useApp();
   const { engineers, projects, assignments } = state;
   const [activeTab, setActiveTab] = useState('overview');
-  const [showAssignmentForm, setShowAssignmentForm] = useState(false);
-  const [showProjectForm, setShowProjectForm] = useState(false);
   const [stats, setStats] = useState({
     totalEngineers: 0,
     activeProjects: 0,
@@ -55,37 +54,18 @@ const Dashboard: React.FC = () => {
     }
   }, [engineers, assignments, projects]);
 
-  const calculateStats = () => {
-    const totalEngineers = engineers.length;
-    const activeProjects = projects.filter((p: Project) => p.status === 'active').length;
-
-    // Calculate average utilization
-    let totalUtilization = 0;
-    let overloaded = 0;
-
-    engineers.forEach((engineer: Engineer) => {
-      const engineerAssignments = assignments.filter((a: Assignment) =>
-        a.engineerId._id === engineer._id &&
-        new Date(a.startDate) <= new Date() &&
-        new Date(a.endDate) >= new Date()
-      );
-      const utilization = engineerAssignments.reduce((sum: number, a: Assignment) => sum + a.allocationPercentage, 0);
-      totalUtilization += utilization;
-      
-      if (utilization > engineer.maxCapacity) {
-        overloaded++;
-      }
-    });
-    
-    const avgUtilization = totalEngineers > 0 ? Math.round(totalUtilization / totalEngineers) : 0;
-    
-    setStats({
-      totalEngineers,
-      activeProjects,
-      avgUtilization,
-      overloadedEngineers: overloaded
-    });
-  };
+// Alternative approach using getCapacitySummary for even cleaner code:
+const calculateStats = () => {
+  const activeProjects = projects.filter((p: Project) => p.status === 'active').length;
+  const capacitySummary = getCapacitySummary(engineers, assignments);
+  
+  setStats({
+    totalEngineers: capacitySummary.totalEngineers,
+    activeProjects,
+    avgUtilization: Math.round(capacitySummary.utilizationPercentage),
+    overloadedEngineers: capacitySummary.overallocatedCount
+  });
+};
 
   const getRecentAssignments = () => {
     const recent = assignments
@@ -94,28 +74,22 @@ const Dashboard: React.FC = () => {
     setRecentAssignments(recent);
   };
 
-  const getCapacityAlerts = () => {
-    const alerts: User[] = [];
-
-    engineers.forEach((engineer: Engineer) => {
-      const engineerAssignments = assignments.filter((a: Assignment) =>
-        a.engineerId._id === engineer._id &&
-        new Date(a.startDate) <= new Date() &&
-        new Date(a.endDate) >= new Date()
-      );
-      const utilization = engineerAssignments.reduce((sum: number, a: Assignment) => sum + a.allocationPercentage, 0);
-      
-      // Alert for overloaded (>100%) or underutilized (<30%) engineers
-      if (utilization > engineer.maxCapacity || utilization < 30) {
-        alerts.push({
-          ...engineer,
-          currentUtilization: utilization
-        } as User & { currentUtilization: number });
-      }
-    });
-    
-    setCapacityAlerts(alerts);
-  };
+// Replace the entire getCapacityAlerts function with:
+const getCapacityAlerts = () => {
+  const engineersWithCapacity = calculateEngineersCapacity(engineers, assignments);
+  
+  const alerts: User[] = engineersWithCapacity
+    .filter(engineer => 
+      engineer.capacityInfo.totalAllocated > engineer.maxCapacity || 
+      engineer.capacityInfo.totalAllocated < 30
+    )
+    .map(engineer => ({
+      ...engineer,
+      currentUtilization: engineer.capacityInfo.totalAllocated
+    } as User & { currentUtilization: number }));
+  
+  setCapacityAlerts(alerts);
+};
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -206,57 +180,15 @@ const Dashboard: React.FC = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Capacity Alerts</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.overloadedEngineers}</p>
+                <p className="text-2xl font-bold text-gray-900">{capacityAlerts.length}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-md mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
-              <Button
-                variant="ghost"
-                onClick={() => setActiveTab('overview')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm rounded-none ${
-                  activeTab === 'overview'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <Activity className="h-4 w-4 mr-2" />
-                Overview
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => setActiveTab('team')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm rounded-none ${
-                  activeTab === 'team'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Team Management
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => setActiveTab('projects')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm rounded-none ${
-                  activeTab === 'projects'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <FolderOpen className="h-4 w-4 mr-2" />
-                Projects
-              </Button>
-            </nav>
-          </div>
-
-          <div className="p-6">
-            {activeTab === 'overview' && (
+     
+         
               <div className="space-y-6">
                 {/* Capacity Alerts */}
                 {capacityAlerts.length > 0 && (
@@ -282,106 +214,14 @@ const Dashboard: React.FC = () => {
                   </Alert>
                 )}
 
-                {/* Recent Assignments */}
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    <Calendar className="h-5 w-5 inline mr-2" />
-                    Recent Assignments
-                  </h3>
-                  <div className="rounded-md border">
-                    {recentAssignments.length === 0 ? (
-                      <p className="p-4 text-gray-500">No assignments yet</p>
-                    ) : (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Engineer</TableHead>
-                            <TableHead>Project</TableHead>
-                            <TableHead>Role</TableHead>
-                            <TableHead>Allocation</TableHead>
-                            <TableHead>Start Date</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {recentAssignments.map((assignment) => (
-                            <TableRow key={assignment._id}>
-                              <TableCell className="font-medium">
-                                {getEngineerName(assignment.engineerId._id)}
-                              </TableCell>
-                              <TableCell>
-                                {getProjectName(assignment.projectId._id)}
-                              </TableCell>
-                              <TableCell>{assignment.role}</TableCell>
-                              <TableCell>{assignment.allocationPercentage}%</TableCell>
-                              <TableCell>{formatDate(assignment.startDate)}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+                <TeamOverview />
+                
 
-            {activeTab === 'team' && (
-              <TeamOverview />
-            )}
+            
 
-            {activeTab === 'projects' && (
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">All Projects</h3>
-                </div>
-                <div className="rounded-md border">
-                  {projects.length === 0 ? (
-                    <p className="p-4 text-gray-500">No projects yet</p>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Start Date</TableHead>
-                          <TableHead>End Date</TableHead>
-                          <TableHead>Team Size</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {projects.map((project: any) => (
-                          <TableRow key={project.id}>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">{project.name}</div>
-                                <div className="text-sm text-gray-500">{project.description}</div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                project.status === 'active' ? 'bg-green-100 text-green-800' :
-                                project.status === 'planning' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-gray-100 text-gray-800'
-                              }`}>
-                                {project.status}
-                              </span>
-                            </TableCell>
-                            <TableCell>{formatDate(project.startDate)}</TableCell>
-                            <TableCell>{formatDate(project.endDate)}</TableCell>
-                            <TableCell>{project.teamSize}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+          
+            </div>
       </div>
-
-
-      
     </div>
   );
 };

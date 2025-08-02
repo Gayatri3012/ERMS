@@ -3,17 +3,30 @@ import { useApp } from '../../context/AppContext';
 // import type { Engineer } from '../types';
 import CapacityBar from '../ui/CapacityBar';
 import { Search, Filter, Plus, User } from 'lucide-react';
+import { calculateEngineerCapacity } from '@/utils/engineerCapacity';
+import { 
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Badge
+} from '@/components/ui/shadcn-components';
 
 interface TeamOverviewProps {
   onCreateAssignment?: (engineerId: string) => void;
 }
 
-const TeamOverview: React.FC<TeamOverviewProps> = ({ onCreateAssignment }) => {
+const TeamOverview: React.FC<TeamOverviewProps> = () => {
   const { state, fetchEngineers, fetchAssignments } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [skillFilter, setSkillFilter] = useState('');
   const [seniorityFilter, setSeniorityFilter] = useState('');
   const [capacityFilter, setCapacityFilter] = useState('');
+  const [showAssignmentForm, setShowAssignmentForm] = useState(false);
+  const [selectedEngineerId, setSelectedEngineerId] = useState<string>('');
 
   useEffect(() => {
     fetchEngineers();
@@ -21,43 +34,14 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({ onCreateAssignment }) => {
   }, []);
 
   // Calculate capacity for each engineer
-  const engineersWithCapacity = state.engineers.map(engineer => {
-      console.log('=== DEBUG INFO ===');
-  console.log('Total assignments in state:', state.assignments.length);
-  console.log('Current engineer:', engineer.name, 'ID:', engineer._id);
-  
-  if (state.assignments.length > 0) {
-    console.log('Sample assignment:', state.assignments[0]);
-    console.log('Assignment keys:', Object.keys(state.assignments[0]));
-  }
-    
-  const engineerAssignments = state.assignments.filter(assignment => {
-    // Type-safe way to handle both string ID and populated object
-    let assignmentEngineerId: string;
-    
-    if (typeof assignment.engineerId === 'string') {
-      assignmentEngineerId = assignment.engineerId;
-    } else if (assignment.engineerId && typeof assignment.engineerId === 'object' && '_id' in assignment.engineerId) {
-      assignmentEngineerId = (assignment.engineerId as any)._id;
-    } else {
-      return false;
-    }
-    
-    return assignmentEngineerId === engineer._id &&
-           new Date(assignment.endDate) > new Date();
-  });
-  
-    const totalAllocated = engineerAssignments.reduce(
-      (sum, assignment) => sum + assignment.allocationPercentage, 0
-    );
-    
-    return {
-      ...engineer,
-      totalAllocated,
-      availableCapacity: engineer.maxCapacity - totalAllocated,
-      assignments: engineerAssignments
-    };
-  });
+  const engineersWithCapacity = state.engineers.map(engineer => 
+    calculateEngineerCapacity(engineer, state.assignments)
+  ).map(engineerWithCapacity => ({
+    ...engineerWithCapacity,
+    totalAllocated: engineerWithCapacity.capacityInfo.totalAllocated,
+    availableCapacity: engineerWithCapacity.capacityInfo.availableCapacity,
+    assignments: engineerWithCapacity.currentAssignments
+  }));
 
   // Get all unique skills for filter
   const allSkills = Array.from(
@@ -89,6 +73,14 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({ onCreateAssignment }) => {
     return 'Available';
   };
 
+  const getCapacityBadgeVariant = (allocated: number, max: number) => {
+    const percentage = (allocated / max) * 100;
+    if (percentage > 100) return 'destructive';
+    if (percentage >= 90) return 'warning';
+    if (percentage >= 70) return 'secondary';
+    return 'success';
+  };
+
   if (state.loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -98,179 +90,304 @@ const TeamOverview: React.FC<TeamOverviewProps> = ({ onCreateAssignment }) => {
     );
   }
 
+  // Add this function after your existing engineersWithCapacity calculation
+  // Replace the simple getNextAvailableDate with this enhanced version:
+  const getAvailabilityInfo = (engineer: any) => {
+    const currentCapacity = engineer.availableCapacity;
+    
+    if (currentCapacity >= 50) {
+      return {
+        status: "Available now",
+        detail: `${currentCapacity}% capacity available`,
+        color: "text-green-600"
+      };
+    } else if (currentCapacity > 0) {
+      return {
+        status: "Partially available",
+        detail: `${currentCapacity}% capacity available`,
+        color: "text-yellow-600"
+      };
+    }
+    
+    // Find next availability date
+    if (engineer.assignments.length === 0) {
+      return {
+        status: "Available now",
+        detail: "No active assignments",
+        color: "text-green-600"
+      };
+    }
+    
+    const sortedEndDates = engineer.assignments
+      .map((assignment:any) => ({
+        endDate: new Date(assignment.endDate),
+        allocation: assignment.allocationPercentage
+      }))
+      .sort((a:any, b:any) => a.endDate.getTime() - b.endDate.getTime());
+    
+    const nextEndDate = sortedEndDates[0].endDate;
+    const isWithinMonth = (nextEndDate.getTime() - new Date().getTime()) < (30 * 24 * 60 * 60 * 1000);
+    
+    return {
+      status: nextEndDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: nextEndDate.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+      }),
+      detail: isWithinMonth ? "Available soon" : "Long-term commitment",
+      color: isWithinMonth ? "text-orange-600" : "text-red-600"
+    };
+  };
+
+  const handleCreateAssignment = (engineerId: string) => {
+    setSelectedEngineerId(engineerId);
+    setShowAssignmentForm(true);
+  };
+
+  const handleAssignmentFormClose = () => {
+    setShowAssignmentForm(false);
+    setSelectedEngineerId('');
+    fetchAssignments();
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Team Overview</h2>
-        <div className="text-sm text-gray-600">
-          {filteredEngineers.length} of {state.engineers.length} engineers
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Team Overview</h1>
+              <p className="text-gray-600">Monitor engineer capacity and availability</p>
+            </div>
+            <div className="text-sm text-gray-600">
+              {filteredEngineers.length} of {state.engineers.length} engineers
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="mb-6 space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search engineers by name, email, or department..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="flex flex-wrap gap-4">
-          <div className="flex items-center space-x-2">
-            <Filter className="h-4 w-4 text-gray-400" />
-            <select
-              value={skillFilter}
-              onChange={(e) => setSkillFilter(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All Skills</option>
-              {allSkills.map(skill => (
-                <option key={skill} value={skill}>{skill}</option>
-              ))}
-            </select>
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <User className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Engineers</p>
+                <p className="text-2xl font-bold text-gray-900">{state.engineers.length}</p>
+              </div>
+            </div>
           </div>
 
-          <select
-            value={seniorityFilter}
-            onChange={(e) => setSeniorityFilter(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Levels</option>
-            <option value="junior">Junior</option>
-            <option value="mid">Mid-level</option>
-            <option value="senior">Senior</option>
-          </select>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <User className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Available</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {engineersWithCapacity.filter(e => e.availableCapacity > 0).length}
+                </p>
+              </div>
+            </div>
+          </div>
 
-          <select
-            value={capacityFilter}
-            onChange={(e) => setCapacityFilter(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Capacity</option>
-            <option value="available">Available</option>
-            <option value="full">At Capacity</option>
-            <option value="overloaded">Overloaded</option>
-          </select>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <User className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">At Capacity</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {engineersWithCapacity.filter(e => e.availableCapacity === 0 && e.totalAllocated <= e.maxCapacity).length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <User className="h-6 w-6 text-red-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Overloaded</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {engineersWithCapacity.filter(e => e.totalAllocated > e.maxCapacity).length}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Engineers Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Engineer
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Skills
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Capacity
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredEngineers.map((engineer) => (
-              <tr key={engineer._id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10">
-                      <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                        <User className="h-6 w-6 text-gray-600" />
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        {engineer.name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {engineer.email}
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        {engineer.seniority} • {engineer.department}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-wrap gap-1">
-                    {engineer.skills.slice(0, 3).map((skill) => (
-                      <span
-                        key={skill}
-                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                      >
-                        {skill}
-                      </span>
+        {/* Search and Filters */}
+        <div className="bg-white rounded-lg shadow-md mb-6 p-6">
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search engineers by name, email, or department..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center space-x-2">
+                <Filter className="h-4 w-4 text-gray-400" />
+                <select
+                  value={skillFilter}
+                  onChange={(e) => setSkillFilter(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All Skills</option>
+                  {allSkills.map(skill => (
+                    <option key={skill} value={skill}>{skill}</option>
+                  ))}
+                </select>
+              </div>
+
+              <select
+                value={seniorityFilter}
+                onChange={(e) => setSeniorityFilter(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Levels</option>
+                <option value="junior">Junior</option>
+                <option value="mid">Mid-level</option>
+                <option value="senior">Senior</option>
+              </select>
+
+              <select
+                value={capacityFilter}
+                onChange={(e) => setCapacityFilter(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Capacity</option>
+                <option value="available">Available</option>
+                <option value="full">At Capacity</option>
+                <option value="overloaded">Overloaded</option>
+              </select>
+
+              <div className="text-sm text-gray-600 flex items-center">
+                Showing {filteredEngineers.length} of {state.engineers.length} engineers
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Engineers Table */}
+        <div className="bg-white rounded-lg shadow-md mb-6">
+          <div className="p-6">
+            <div className="rounded-md border">
+              {filteredEngineers.length === 0 ? (
+                <div className="text-center py-12">
+                  <User className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No engineers found</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Try adjusting your search criteria or filters.
+                  </p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Engineer</TableHead>
+                      <TableHead>Skills</TableHead>
+                      <TableHead>Capacity</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Next Available</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredEngineers.map((engineer) => (
+                      <TableRow key={engineer._id} className="hover:bg-gray-50">
+                        <TableCell>
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10">
+                              <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                <User className="h-6 w-6 text-gray-600" />
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                {engineer.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {engineer.email}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {engineer.seniority} • {engineer.department}
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {engineer.skills.slice(0, 3).map((skill) => (
+                              <Badge
+                                key={skill}
+                                variant="default"
+                              >
+                                {skill}
+                              </Badge>
+                            ))}
+                            {engineer.skills.length > 3 && (
+                              <Badge variant="secondary">
+                                +{engineer.skills.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="w-32">
+                            <CapacityBar
+                              current={engineer.totalAllocated}
+                              max={engineer.maxCapacity}
+                              size="sm"
+                              showText={false}
+                            />
+                            <div className="text-xs text-gray-600 mt-1">
+                              {engineer.totalAllocated}% / {engineer.maxCapacity}%
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getCapacityBadgeVariant(engineer.totalAllocated, engineer.maxCapacity)}>
+                            {getCapacityStatus(engineer.totalAllocated, engineer.maxCapacity)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {(() => {
+                            const availability = getAvailabilityInfo(engineer);
+                            return (
+                              <div>
+                                <div className={`text-sm font-medium ${availability.color}`}>
+                                  {availability.status}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {availability.detail}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </TableCell>
+                      </TableRow>
                     ))}
-                    {engineer.skills.length > 3 && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        +{engineer.skills.length - 3}
-                      </span>
-                    )}
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="w-32">
-                    <CapacityBar
-                      current={engineer.totalAllocated}
-                      max={engineer.maxCapacity}
-                      size="sm"
-                      showText={false}
-                    />
-                    <div className="text-xs text-gray-600 mt-1">
-                      {engineer.totalAllocated}% / {engineer.maxCapacity}%
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    engineer.totalAllocated > engineer.maxCapacity
-                      ? 'bg-red-100 text-red-800'
-                      : engineer.totalAllocated >= engineer.maxCapacity * 0.9
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-green-100 text-green-800'
-                  }`}>
-                    {getCapacityStatus(engineer.totalAllocated, engineer.maxCapacity)}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  {onCreateAssignment && (
-                    <button
-                      onClick={() => onCreateAssignment(engineer._id)}
-                      className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Assign
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {filteredEngineers.length === 0 && (
-        <div className="text-center py-12">
-          <User className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No engineers found</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Try adjusting your search criteria or filters.
-          </p>
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

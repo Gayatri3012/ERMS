@@ -53,7 +53,6 @@ const AppContent: React.FC = () => {
             <Layout>
               <Routes>
                 <Route path="/" element={<ManagerDashboard />} />
-                <Route path="/dashboard" element={<ManagerDashboard />} />
                 <Route path="/team" element={<TeamOverview />} />
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/assignments" element={<Assignments />} />

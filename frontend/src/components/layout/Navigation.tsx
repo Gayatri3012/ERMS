@@ -127,14 +127,14 @@ const Navigation: React.FC = () => {
                     </div>
 
                     {/* Profile Link */}
-                    <Link
-                      to={user.role === 'manager' ? '/manager/profile' : '/engineer/profile'}
-                      onClick={() => setIsProfileDropdownOpen(false)}
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <Settings className="h-4 w-4 mr-3" />
-                      Profile Settings
-                    </Link>
+                  {user.role === 'engineer' && <Link
+                    to={'/engineer/profile'}
+                    onClick={() => setIsProfileDropdownOpen(false)}
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <Settings className="h-4 w-4 mr-3" />
+                    Profile Settings
+                  </Link>}
 
                     {/* Department/Skills Info */}
                     <div className="px-4 py-2 border-t border-gray-100">

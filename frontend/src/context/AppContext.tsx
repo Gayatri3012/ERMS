@@ -55,6 +55,7 @@ const ActionType = {
   SET_ERROR: 'SET_ERROR',
   SET_ENGINEERS: 'SET_ENGINEERS',
   SET_PROJECTS: 'SET_PROJECTS',
+  UPDATE_PROJECT: 'UPDATE_PROJECT',
   SET_ASSIGNMENTS: 'SET_ASSIGNMENTS',
   ADD_PROJECT: 'ADD_PROJECT',
   ADD_ASSIGNMENT: 'ADD_ASSIGNMENT',
@@ -69,6 +70,7 @@ type Action =
   | { type: typeof ActionType.SET_ERROR; payload: string | null }
   | { type: typeof ActionType.SET_ENGINEERS; payload: Engineer[] }
   | { type: typeof ActionType.SET_PROJECTS; payload: Project[] }
+  | { type: typeof ActionType.UPDATE_PROJECT; payload: Project }
   | { type: typeof ActionType.SET_ASSIGNMENTS; payload: Assignment[] }
   | { type: typeof ActionType.ADD_PROJECT; payload: Project }
   | { type: typeof ActionType.ADD_ASSIGNMENT; payload: Assignment }
@@ -95,6 +97,13 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { ...state, engineers: action.payload, loading: false };
     case ActionType.SET_PROJECTS:
       return { ...state, projects: action.payload, loading: false };
+    case ActionType.UPDATE_PROJECT:
+      return {
+        ...state,
+        projects: state.projects.map(project =>
+          project._id === action.payload._id ? action.payload : project
+        ),
+    };
     case ActionType.SET_ASSIGNMENTS:
       return { ...state, assignments: action.payload, loading: false };
     case ActionType.ADD_PROJECT:
@@ -125,6 +134,7 @@ interface AppContextType {
   fetchProjects: () => Promise<void>;
   fetchAssignments: () => Promise<void>;
   createProject: (projectData: Omit<Project, '_id'>) => Promise<void>;
+  editProject: (projectData: any, projectId: any) => Promise<void>;
   createAssignment: (assignmentData: Omit<Assignment, '_id' | 'engineer' | 'project'>) => Promise<void>;
   updateAssignment: (id: string, assignmentData: Partial<Assignment>) => Promise<void>;
   deleteAssignment: (id: string) => Promise<void>;
@@ -175,10 +185,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       throw error;
     }
   };
+const editProject = async (projectId: any, projectData: any) => {
+  try {
+    const response = await api.put(`/projects/${projectId}`, projectData);
+
+      dispatch({ 
+        type: 'UPDATE_PROJECT', 
+        payload: response.data.project 
+      });
+    
+  } catch (error) {
+    console.error('Error editing project:', error);
+    throw error;
+  }
+};
 
   const createAssignment = async (assignmentData: Omit<Assignment, '_id' | 'engineer' | 'project'>) => {
     try {
+      console.log(assignmentData)
       const response = await api.post('/assignments', assignmentData);
+      console.log(response)
       dispatch({ type: ActionType.ADD_ASSIGNMENT, payload: response.data.assignment });
     } catch (error: any) {
       dispatch({ type: ActionType.SET_ERROR, payload: error.response?.data?.message || 'Failed to create assignment' });
@@ -221,6 +247,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     fetchProjects,
     fetchAssignments,
     createProject,
+    editProject,
     createAssignment,
     updateAssignment,
     deleteAssignment,
