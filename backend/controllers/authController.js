@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const {validationResult} = require('express-validator')
+
 
 const login = async (req, res) => {
     try {
@@ -79,6 +81,81 @@ const getProfile = async (req, res) => {
     }
 };
 
+const updateProfile = async (req, res) => {
+    console.log("in updateprofile")
+    try {
+        // Check for validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: errors.array()
+            });
+        }
+
+        const { name, department, seniority, maxCapacity, skills } = req.body;
+        console.log(name, department, seniority, maxCapacity, skills)
+        
+        // Find the user
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Prepare update data
+        const updateData = {};
+        
+        if (name !== undefined) updateData.name = name.trim();
+        if (department !== undefined) updateData.department = department.trim();
+        if (seniority !== undefined) updateData.seniority = seniority;
+        if (maxCapacity !== undefined) updateData.maxCapacity = maxCapacity;
+        
+        // Handle skills - remove duplicates and trim
+        if (skills !== undefined) {
+            const uniqueSkills = [...new Set(skills.map(skill => skill.trim()).filter(skill => skill.length > 0))];
+            updateData.skills = uniqueSkills;
+        }
+
+        // Update the user
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user.id,
+            { ...updateData, updatedAt: new Date() },
+            { new: true, runValidators: true }
+        ).select('-password -__v');
+
+        res.status(200).json({
+            success: true,
+            message: 'Profile updated successfully',
+            user: updatedUser
+        });
+
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        
+        // Handle MongoDB validation errors
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: Object.values(error.errors).map(err => ({
+                    field: err.path,
+                    message: err.message
+                }))
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: 'Server error while updating profile',
+            error: error.message
+        });
+    }
+};
+
 const register = async (req, res) => {
     try {
         const { email, password, name, role } = req.body;
@@ -141,5 +218,6 @@ const register = async (req, res) => {
 module.exports = {
     login,
     getProfile,
-    register
+    register,
+    updateProfile
 };

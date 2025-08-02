@@ -11,20 +11,28 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  Badge
+  Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
 } from '@/components/ui/shadcn-components';
 
 interface TeamOverviewProps {
   onCreateAssignment?: (engineerId: string) => void;
+  embedded?: boolean; // New prop to control the view
+  maxRows?: number; // New prop to limit rows when embedded
 }
 
-const TeamOverview: React.FC<TeamOverviewProps> = () => {
+const TeamOverview: React.FC<TeamOverviewProps> = ({ 
+  embedded = false, 
+  maxRows = 10 
+}) => {
   const { state, fetchEngineers, fetchAssignments } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [skillFilter, setSkillFilter] = useState('');
   const [seniorityFilter, setSeniorityFilter] = useState('');
   const [capacityFilter, setCapacityFilter] = useState('');
-
 
   useEffect(() => {
     fetchEngineers();
@@ -47,7 +55,7 @@ const TeamOverview: React.FC<TeamOverviewProps> = () => {
   ).sort();
 
   // Filter engineers based on search and filters
-  const filteredEngineers = engineersWithCapacity.filter(engineer => {
+  let filteredEngineers = engineersWithCapacity.filter(engineer => {
     const matchesSearch = engineer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          engineer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          engineer.department.toLowerCase().includes(searchTerm.toLowerCase());
@@ -62,6 +70,11 @@ const TeamOverview: React.FC<TeamOverviewProps> = () => {
 
     return matchesSearch && matchesSkill && matchesSeniority && matchesCapacity;
   });
+
+  // Limit rows when embedded
+  if (embedded && maxRows) {
+    filteredEngineers = filteredEngineers.slice(0, maxRows);
+  }
 
   const getCapacityStatus = (allocated: number, max: number) => {
     const percentage = (allocated / max) * 100;
@@ -88,8 +101,6 @@ const TeamOverview: React.FC<TeamOverviewProps> = () => {
     );
   }
 
-  // Add this function after your existing engineersWithCapacity calculation
-  // Replace the simple getNextAvailableDate with this enhanced version:
   const getAvailabilityInfo = (engineer: any) => {
     const currentCapacity = engineer.availableCapacity;
     
@@ -137,8 +148,121 @@ const TeamOverview: React.FC<TeamOverviewProps> = () => {
     };
   };
 
+  // Render embedded version (for dashboard)
+  if (embedded) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Team Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            {filteredEngineers.length === 0 ? (
+              <div className="text-center py-8">
+                <User className="mx-auto h-8 w-8 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No engineers found</h3>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Engineer</TableHead>
+                    <TableHead>Skills</TableHead>
+                    <TableHead>Capacity</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Next Available</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredEngineers.map((engineer) => (
+                    <TableRow key={engineer._id} className="hover:bg-gray-50">
+                      <TableCell>
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-8 w-8">
+                            <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
+                              <User className="h-4 w-4 text-gray-600" />
+                            </div>
+                          </div>
+                          <div className="ml-3">
+                            <div className="text-sm font-medium text-gray-900">
+                              {engineer.name}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {engineer.seniority} • {engineer.department}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {engineer.skills.slice(0, 2).map((skill) => (
+                            <Badge
+                              key={skill}
+                              variant="default"
+                              className="text-xs"
+                            >
+                              {skill}
+                            </Badge>
+                          ))}
+                          {engineer.skills.length > 2 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{engineer.skills.length - 2}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="w-24">
+                          <CapacityBar
+                            current={engineer.totalAllocated}
+                            max={engineer.maxCapacity}
+                            size="sm"
+                            showText={false}
+                          />
+                          <div className="text-xs text-gray-600 mt-1">
+                            {engineer.totalAllocated}% / {engineer.maxCapacity}%
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getCapacityBadgeVariant(engineer.totalAllocated, engineer.maxCapacity)} className="text-xs">
+                          {getCapacityStatus(engineer.totalAllocated, engineer.maxCapacity)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {(() => {
+                          const availability = getAvailabilityInfo(engineer);
+                          return (
+                            <div>
+                              <div className={`text-xs font-medium ${availability.color}`}>
+                                {availability.status}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {availability.detail}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+          {engineersWithCapacity.length > maxRows && (
+            <div className="text-center mt-4">
+              <p className="text-sm text-gray-500">
+                Showing {maxRows} of {engineersWithCapacity.length} engineers
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
 
-
+  // Render full standalone version
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}

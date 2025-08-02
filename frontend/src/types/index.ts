@@ -125,6 +125,14 @@ export interface AssignmentFormData {
 }
 
 
+export interface ProfileFormData {
+  name: string;
+  department: string;
+  seniority: string;
+  maxCapacity: number;
+  skills: string[];
+}
+
 export interface EngineerWithCapacity extends Engineer {
   capacityInfo: CapacityInfo;
   currentAssignments: Assignment[];

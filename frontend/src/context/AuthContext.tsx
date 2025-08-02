@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import type { ProfileFormData } from '@/types';
 
 import api from '../utils/api';
 
@@ -20,6 +21,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<any>;
   logout: () => void;
+  updateUserProfile: (profileData : ProfileFormData) => void;
   checkAuth: () => Promise<void>;
 }
 
@@ -51,6 +53,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(null);
     setIsAuthenticated(false);
   };
+  
+  const updateUserProfile = async (profileData: ProfileFormData) => {
+  try {
+    // Make API call to update user profile
+    const response = await api.put('/auth/profile',profileData);
+    
+    if (response.data.success && response.data.user) {
+          const updatedUser = response.data.user;
+          
+          // Update user state
+          setUser(updatedUser);
+    }
+    
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
 
   const checkAuth = async () => {
     try {
@@ -86,6 +106,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loading,
     login,
     logout,
+    updateUserProfile,
     checkAuth,
   };
 

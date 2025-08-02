@@ -5,7 +5,6 @@ import type { Assignment, Project } from '../../types';
 import  CapacityBar  from '../ui/CapacityBar';
 import { Calendar, Clock, User } from 'lucide-react';
 import EngineerAssignments from './EngineerAssignments';
-import EngineerProfile from './EngineerProfile';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -113,9 +112,6 @@ const Dashboard: React.FC = () => {
         {/* Current Projects */}
         <EngineerAssignments />
 
-        {/* Skills & Profile */}
-        
-        <EngineerProfile />
       </div>
     </div>
   );
